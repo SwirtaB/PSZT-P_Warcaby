@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+
+cmake-build*
+.idea
+.vscode
+
+#folders
+bin/
+build/
+
+#documentation
+docs/html
+
+*.ini
+*.log
