@@ -101,6 +101,62 @@ std::pair<int, int> ox::bot::bot_move(const FieldBoard &fieldBoard, PlayerEnum p
     return bestMove;
 }
 
+/* Biały MAKSYMALIZUJE wynik, czarny MINIMALIZUJE wynik
+ * int basicHeuristicTable = {  waga mojego piona,      - mm
+                                waga mojej damy,        - mk 
+                                waga piona przeciwnika, - hm
+                                waga damy przeciwnika   - hk}
+ * function - H = mk*<ilość moich damek> + mm*<ilość moich pionów> - (hk*<ilość wrogich damek> + hm*<ilość wrogich pionów>)
+ * 
+ * int betterHeuristicTable = { waga mojego piona,                                      - mm  
+ *                              waga mojej damy,                                        - mk
+ *                              waga pól brzegowych (zajętych przez moje bierki),       - msf
+ *                              waga pól brzegowych (zajętych przez wrogie bierki),     - hsf
+ *                              waga pól bliskich polom promocji (dla moich pionów),    - mpf
+ *                              waga pól bliskich polom promocji (dla wrogich pionów)   - hpf}
+ * 
+ * function - H = mk*<ilość moich damek> + mm*<ilość moich pionów> + msf*<ilość moich bierek na bezpiecznych polach> + mpf*<ilość moich bierek na polach bliskich polom promocji>
+ *              - (hk*<ilość wrogich damek> + hm*<ilość wrogich pionów> + hsf*<ilość wrogich bierek na bezpiecznych polach> + hpf*<ilość wrogich bierek na polach bliskich polom promocji>)
+ * 
+ * Możliwe jest dodanie heurystyki końcowej. W momencie gdy na planszy są już tylko damki stosujemy inną heurystykę.
+ * Przykład suma odległości:
+ *  Dla każdej damki liczymy sumę odległości od wrogich damek -> Preferujemy ucieczkę
+ *  Dodatkwo możliwość zbicia wrogiej damki jest bardzo wysoko punktowana.
+ * 
+ * Podsumowując, uciekamy jak tylko się da, chyba że pojawia się okazja zbicia damy przeciwnika
+ * 
+ * int estimate_move(const FieldBoard &gameField, PlayerEnum player, int x, int y)
+ * {
+ *      switch(gameField.check_state())
+ *      {
+ *          case WHITE_WON:
+ *              return 100;
+ *          case BLACK_WON:
+ *              return -100;
+ *          case TIE:
+ *              return 0;
+ *          default:
+ *              break;
+ *      }
+ *      int score = 0;
+ *      switch(player)
+ *      {
+ *          case WHITE_PLAYER:
+ *              for(gameField)
+ *                  score = H;
+ *              break;
+ *          case BLACK_PLAYER:
+ *              for(gameField)
+ *                  score = H;
+ *              break;
+ *          default:
+ *              score = 0;
+ *              break;
+ *      }
+ *      return score;
+ * }
+ */
+
 /**
  * @brief Funkcja ktora estymuje "jakosc" planszy dla danego gracza. Kolko minimalizuje jakosc, krzyzyk maksymalizuje jakosc
  * 

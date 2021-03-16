@@ -21,11 +21,11 @@ cd ..
 Uruchomienie:
 #### Windows
 ``` sh
-./bin/Debug/zpr_gldg.exe [sciezka/do/pliku/konfiguracyjnego]
+./bin/Debug/pszt_warcaby.exe [sciezka/do/pliku/konfiguracyjnego]
 ```
 #### Linux
 ``` sh
-./bin/zpr_gldg [sciezka/do/pliku/konfiguracyjnego]
+./bin/pszt_warcaby [sciezka/do/pliku/konfiguracyjnego]
 ```
 ## Generowanie i uruchomienie testow
 Flaga BUILD_TESTS w CMakeLists.txt kontroluje uruchamianie testów przy budowie
