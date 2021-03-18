@@ -1,5 +1,6 @@
 # PSZT-P_Warcaby
-Prosta gra w warcaby w wersji rosyjskiej. Gracz może grać z komputerem, który wykorzytuje drzewo gry lub z innym graczem wykonując ruch na zmianę na jednej maszynie.
+Projekt realizowany w ramach przedmiotu PSZT (Podstawy Sztucznej Inteligencji).
+Prosta gra w warcaby w wersji rosyjskiej. Gracz może rozgrywać partię z komputerem, który wykorzytuje drzewo gry (algorytm minimax z przycinaniem alpha-beta) lub z innym graczem wykonując ruchy na zmianę na jednej maszynie.
 
 ## Wymagania
 #### Linux
