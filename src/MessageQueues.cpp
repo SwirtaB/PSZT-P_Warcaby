@@ -8,11 +8,10 @@
  * @copyright Copyright (c) 2021
  * 
  */
+
 #include "../include/MessageQueues.hpp"
 
-#include <chrono>
-
-using namespace ox;
+using namespace checkers;
 
 /**
  * @brief Wysłanie wiadomości o akcji gracza do kolejki.
@@ -36,7 +35,7 @@ void MessageQueues::send_player_input(const PlayerInputMessage input)
  * 
  * @return const PlayerInputMessage - wiadomość z akcją gracza
  */
-const PlayerInputMessage MessageQueues::wait_for_player_input()
+PlayerInputMessage MessageQueues::wait_for_player_input()
 {
     std::unique_lock<std::mutex> lk(playerInputQueueMutex);
     std::queue<PlayerInputMessage> *queue = &this->playerInputQueue;
@@ -62,11 +61,11 @@ void MessageQueues::send_game_state(const GameStateMessage state)
  * 
  * @return const std::optional<const GameStateMessage> - odebrana wiadomość ze stanem gry.
  */
-const std::optional<const GameStateMessage> MessageQueues::check_for_game_state()
+std::optional<const GameStateMessage> MessageQueues::check_for_game_state()
 {
     if (gameStateQueue.empty())
     {
-        return std::optional<GameStateMessage>();
+        return std::nullopt;
     }
     else
     {

@@ -10,14 +10,14 @@
  */
 
 #include "../include/Controller.hpp"
-#include "../include/BotMove.hpp"
+//#include "../include/BotMove.hpp"
 
 #include <chrono>
 #include <thread>
 #include <climits>
-#include <fstream>
+#include <iostream>
 
-using namespace ox;
+using namespace checkers;
 
 /**
  * @brief Konstruktor kontrolera z podaną konfiguracją.
@@ -27,8 +27,9 @@ using namespace ox;
  * @param queuesHandler_ - uchwyt na koljkę komunikatów.
  */
 Controller::Controller(Config &config_, std::shared_ptr<MessageQueues> queuesHandler_)
-    : gameState(PREPARING), messageQueues(queuesHandler_), config(config_)
+    : gameState(), messageQueues(std::move(queuesHandler_)), config(config_)
 {
+    init();
     send_state();
 }
 
@@ -38,18 +39,40 @@ Controller::Controller(Config &config_, std::shared_ptr<MessageQueues> queuesHan
  */
 void Controller::run()
 {
-    loadedSave = try_load_saved_state(config);
-    init();
-    if (loadedSave.has_value())
+    while (true)
     {
-        gameState = LOAD_SAVE_QUESTION;
+        if (need_player_input())
+        {
+            PlayerInputMessage message = get_player_input();
+            switch (message.messageType)
+            {
+                case EXIT:
+                    return exit();
+
+                case SELECT:
+                    if (try_select_field(message.x, message.y)) {
+                        // prevent second branch
+                    } else if (try_move_piece(message.x, message.y)) {
+                        flip_current_player();
+                        gameState.board.selectedField = std::nullopt;
+                    }
+                    break;
+            }
+            gameState.gameProgress = check_game_progress();
+            send_state();
+        }
+        else
+        {
+            // TODO: adapt to checkers
+//            std::pair<int, int> move = bot::bot_move(fieldBoard, currentPlayer, config.bot_tactic, config.depth);
+//            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+//            select_field(move.first, move.second, currentPlayer);
+
+            flip_current_player();
+            gameState.gameProgress = check_game_progress();
+            send_state();
+        }
     }
-    else
-    {
-        gameState = PLAYING;
-    }
-    send_state();
-    play_game();
 }
 
 /**
@@ -58,16 +81,19 @@ void Controller::run()
  */
 void Controller::init()
 {
-    fieldBoard = FieldBoard();
-    gameState = PLAYING;
-    if (config.start == CROSS)
-    {
-        currentPlayer = CROSS_PLAYER;
+    for (size_t x = 0; x < 8; ++x) {
+        for (size_t y = 0; y < 8; ++y) {
+            if ((x + y) % 2 == 0 && y < 3) {
+                gameState.board.fields[x][y] = WHITE_PAWN;
+            } else if ((x + y) % 2 == 0 && y > 4) {
+                gameState.board.fields[x][y] = BLACK_PAWN;
+            } else {
+                gameState.board.fields[x][y] = std::nullopt;
+            }
+        }
     }
-    else
-    {
-        currentPlayer = CIRCLE_PLAYER;
-    }
+    gameState.gameProgress = PLAYING;
+    gameState.currentPlayer = WHITE;
 }
 
 /**
@@ -88,7 +114,9 @@ PlayerInputMessage Controller::get_player_input()
  */
 bool Controller::need_player_input() const
 {
-    return gameState != PLAYING || currentPlayer == CROSS_PLAYER && !config.cross_is_bot || currentPlayer == CIRCLE_PLAYER && !config.circle_is_bot;
+    return gameState.gameProgress != PLAYING ||
+        (gameState.currentPlayer == WHITE && !config.white_is_bot
+        || gameState.currentPlayer == BLACK && !config.black_is_bot);
 }
 
 /**
@@ -97,7 +125,7 @@ bool Controller::need_player_input() const
  */
 void Controller::send_state() const
 {
-    messageQueues->send_game_state(GameStateMessage(gameState, fieldBoard));
+    messageQueues->send_game_state(GameStateMessage(gameState.gameProgress, gameState.board));
 }
 
 /**
@@ -105,175 +133,61 @@ void Controller::send_state() const
  * 
  * @param x - wartość x pola.
  * @param y - wartość y pola.
- * @param player - gracz który wykonuje ruch.
- * @return true - ruch wykonany.
+ * @return true - wybrano wykonany.
  * @return false - ruch był nieprawidłowy.
  */
-bool Controller::select_field(int x, int y, PlayerEnum player)
+bool Controller::try_select_field(int x, int y)
 {
-    switch (player)
+    if ((gameState.currentPlayer == BLACK
+        && gameState.board.fields[x][y]
+        && (gameState.board.fields[x][y].value() == BLACK_PAWN || gameState.board.fields[x][y].value() == BLACK_QUEEN))
+        ||
+        (gameState.currentPlayer == WHITE
+         && gameState.board.fields[x][y]
+         && (gameState.board.fields[x][y].value() == WHITE_PAWN || gameState.board.fields[x][y].value() == WHITE_QUEEN)))
     {
-    case CIRCLE_PLAYER:
-        return fieldBoard.circle_field(x, y);
-    case CROSS_PLAYER:
-        return fieldBoard.cross_field(x, y);
-    default:
+        gameState.board.selectedField = Coord(x, y);
+        return true;
+    } else {
         return false;
     }
+}
+
+bool Controller::try_move_piece(int x, int y) {
+    if (!gameState.board.selectedField.has_value() || gameState.board.fields[x][y] || (x + y) % 2 == 1) {
+        return false;
+    }
+    // TODO: check valid move
+    Coord pc = gameState.board.selectedField.value();
+    gameState.board.fields[x][y] = gameState.board.fields[pc.x][pc.y];
+    gameState.board.fields[pc.x][pc.y] = std::nullopt;
+    return true;
 }
 
 /**
  * @brief Zamień gracza który będzie teraz wykonywał ruch.
  * 
  */
-void Controller::flip_player()
-{
-    if (currentPlayer == CROSS_PLAYER)
+void Controller::flip_current_player() {
+    if (gameState.currentPlayer == WHITE)
     {
-        currentPlayer = CIRCLE_PLAYER;
+        gameState.currentPlayer = BLACK;
     }
     else
     {
-        currentPlayer = CROSS_PLAYER;
+        gameState.currentPlayer = WHITE;
     }
+}
+
+GameProgressEnum Controller::check_game_progress() const {
+    // TODO: implement game progress checking
+    return PLAYING;
 }
 
 /**
  * @brief Zakończ pracę kontrolera, zapisz stan gry jeśli była w trakcie.
- * 
+ *
  */
 void Controller::exit()
 {
-    if (gameState == PLAYING)
-    {
-        try_save_state();
-    }
-}
-
-/**
- * @brief Pętla rozgryki.
- * 
- */
-void Controller::play_game()
-{
-    while (true)
-    {
-        if (need_player_input())
-        {
-            PlayerInputMessage message = get_player_input();
-            switch (message.messageType)
-            {
-            case EXIT:
-                return exit();
-                break;
-
-            case RESET_GAME:
-                init();
-                break;
-
-            case LOAD_SAVE:
-                try_load_cached_save();
-                break;
-
-            case INPUT:
-                /*Weryfikacja czy wykonany przez gracza ruch byl poprawny*/
-                if (select_field(message.x, message.y, currentPlayer))
-                    flip_player();
-                break;
-            }
-            gameState = fieldBoard.check_state();
-            send_state();
-        }
-        else
-        {
-            std::pair<int, int> move = bot::bot_move(fieldBoard, currentPlayer, config.bot_tactic, config.depth);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            select_field(move.first, move.second, currentPlayer);
-            flip_player();
-            gameState = fieldBoard.check_state();
-            send_state();
-        }
-    }
-}
-
-/**
- * @brief Ustaw stan gry na ten z wczytanej gry.
- * 
- */
-void Controller::try_load_cached_save()
-{
-    if (loadedSave)
-    {
-        fieldBoard = loadedSave.value().first;
-        currentPlayer = loadedSave.value().second;
-        gameState = PLAYING;
-    }
-}
-
-/**
- * @brief Spróbuj wczytać stan gry z pliku o ścieżce podanej w pliku konfiguracyjnym.
- * 
- * @return true - poprawnie wczytano plik.
- * @return false - w każdym innym przypadku.
- */
-std::optional<std::pair<FieldBoard, PlayerEnum>> Controller::try_load_saved_state(const Config &config)
-{
-    try
-    {
-        std::ifstream save(config.save_path);
-        std::optional<FieldBoard> loaded_gf = FieldBoard::try_read(save);
-        if (!loaded_gf.has_value())
-        {
-            return std::optional<std::pair<FieldBoard, PlayerEnum>>();
-        }
-        std::string player;
-        PlayerEnum current_player;
-        save >> player;
-        if (player == "cross")
-        {
-            current_player = CROSS_PLAYER;
-        }
-        else if (player == "circle")
-        {
-            current_player = CIRCLE_PLAYER;
-        }
-        else
-        {
-            return std::optional<std::pair<FieldBoard, PlayerEnum>>();
-        }
-
-        return std::make_pair(loaded_gf.value(), current_player);
-    }
-    catch (std::exception &e)
-    {
-        return std::optional<std::pair<FieldBoard, PlayerEnum>>();
-    }
-}
-
-/**
- * @brief Spróbuj zapisać obecny stan gry do pliku o ścieżce podanej w pliku konfiguracyjnym.
- * 
- * @return true - poprawnie zapisano plik.
- * @return false - w każdym innym przypadku.
- */
-bool Controller::try_save_state() const
-{
-    try
-    {
-        std::ofstream save(config.save_path);
-        fieldBoard.write(save);
-        if (currentPlayer == CROSS_PLAYER)
-        {
-            save << "cross\n";
-        }
-        else
-        {
-            save << "circle\n";
-        }
-        return true;
-    }
-    catch (std::exception &e)
-    {
-        return false;
-    }
 }

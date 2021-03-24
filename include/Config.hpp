@@ -17,39 +17,8 @@
 using std::optional;
 using std::string;
 
-namespace ox
+namespace checkers
 {
-    /** \enum ConfigStart
-     * @brief Który gracz ma pierwszy ruch.
-     * 
-     */
-    enum ConfigStart
-    {
-        CROSS,
-        CIRCLE
-    };
-    /** \enum ConfigBotTactic
-     * @brief Z jakiej taktyki korzystają boty.
-     * 
-     */
-    enum ConfigBotTactic
-    {
-        HEURISTIC,
-        GAME_TREE
-    };
-
-    /** \enum ConfigUiSize
-     * @brief Rozmiar interfejsu gracza.
-     * 
-     */
-    enum ConfigUiSize
-    {
-        SMALL,
-        MEDIUM,
-        LARGE,
-        RESIZABLE,
-    };
-
     /** \struct Config
      * @brief Struktura reprezentująca wczytane dane konfiguracyjne.
      * @details Jest wczytywany ze zmiennych ze skryptu w pythonie o nazwie config.py
@@ -64,43 +33,23 @@ namespace ox
          * @brief Czy krzyżykiem steruje bot.
          * 
          */
-        bool cross_is_bot;
+        bool white_is_bot = false;
         /**
          * @brief Czy kółkiem steruje bot.
          * 
          */
-        bool circle_is_bot;
+        bool black_is_bot = false;
         /**
-         * @brief Który gracz rozpoczyna grę.
+         * @brief Głębokość przeszukiwania drzewa gry.
          * 
          */
-        ConfigStart start;
-        /**
-         * @brief Jaką taktyką posługują się boty.
-         * 
-         */
-        ConfigBotTactic bot_tactic;
-        /**
-         * @brief Rozmiar interfejsu gracza.
-         * 
-         */
-        ConfigUiSize ui_size;
-        /**
-         * @brief Głębokość przeszukiwania drzewa w przypadku taktyki GAME_TREE botów.
-         * 
-         */
-        int depth;
-        /**
-         * @brief Ścieżka do pliku z zapisaną grą.
-         * 
-         */
-        std::string save_path;
+        int depth = 1;
 
         /**
-         * @brief Spróbuj wczytać plik konfiguracyjny z tekstu skryptu python.
+         * @brief Spróbuj wczytać plik konfiguracyjny z argumentów wywołania programu.
          * 
          */
-        static std::optional<Config> try_from_script(const char *config_string);
+        static std::optional<Config> try_from_args(int argc, char *argv[]);
     };
 
-} // namespace ox
+} // namespace checkers
