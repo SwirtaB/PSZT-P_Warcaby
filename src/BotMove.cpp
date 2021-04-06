@@ -9,6 +9,10 @@
  * 
  */
 
+#include "../include/BotMove.hpp"
+#include <climits>
+
+using namespace checkers;
 
 ///**
 // * @brief Implemetuje obsluge ruchu bot'a. Wywoluje odpowiednie funkcje w zaleznosci od wartosci wczytanych z pliku konfiguracyjnego.
@@ -118,38 +122,38 @@
  *  Dodatkwo możliwość zbicia wrogiej damki jest bardzo wysoko punktowana.
  * 
  * Podsumowując, uciekamy jak tylko się da, chyba że pojawia się okazja zbicia damy przeciwnika
- * 
- * int estimate_move(const FieldBoard &gameField, PlayerEnum player, int x, int y)
- * {
- *      switch(gameField.check_state())
- *      {
- *          case WHITE_WON:
- *              return 100;
- *          case BLACK_WON:
- *              return -100;
- *          case TIE:
- *              return 0;
- *          default:
- *              break;
- *      }
- *      int score = 0;
- *      switch(player)
- *      {
- *          case WHITE_PLAYER:
- *              for(gameField)
- *                  score = H;
- *              break;
- *          case BLACK_PLAYER:
- *              for(gameField)
- *                  score = H;
- *              break;
- *          default:
- *              score = 0;
- *              break;
- *      }
- *      return score;
- * }
- */
+*/ 
+int estimate_move(const GameState &game, PlayerEnum player, Coord coord)
+{
+    switch(game.get_game_progress())
+    {
+        case WHITE_WON:
+            return 100;
+        case BLACK_WON:
+            return -100;
+        case TIE:
+            return 0;
+        default:
+            break;
+    }
+    int score = 0;
+    switch(player)
+    {
+        case WHITE:
+            //funkcja heurystyczna
+            score = 0;
+            break;
+        case BLACK:
+            //funkcja heurystyczna
+            score = 0;
+            break;
+        default:
+            score = 0;
+            break;
+    }
+    return score;
+}
+
 
 ///**
 // * @brief Funkcja ktora estymuje "jakosc" planszy dla danego gracza. Kolko minimalizuje jakosc, krzyzyk maksymalizuje jakosc
@@ -439,69 +443,87 @@
 //    }
 //    return bestScore;
 //}
-///**
-// * @brief Implementuje algorytm minimax wykorzystujac alpha-beta pruning
-// *
-// * @param x - wspolrzedna x rozpatrywanego ruchu
-// * @param y - wspolrzedna y rozpatrywanego ruchu
-// * @param depth - gleboksc przegladania
-// * @param alpha - wartosc zmiennej alpha (alpha-beta pruning)
-// * @param beta - wartosc zmiennej beta (alpha-beta pruning)
-// * @param gameField - obecnie rozpatrywana plansza
-// * @param player - gracz wykonujacy ruch
-// * @return int - jakosc danej planszy
-// */
-//int minimax(int x, int y, int depth, int alpha, int beta, FieldBoard gameField, PlayerEnum player)
-//{
-//    if (!depth || gameField.check_state() != PLAYING)
-//    {
-//        return estimate_move(gameField, player, x, y);
-//    }
-//    int bestScore = 0, score = 0;
-//    switch (player)
-//    {
-//    case CIRCLE_PLAYER:
-//        bestScore = INT_MAX;
-//        for (int y = 0; y < 3; ++y)
-//        {
-//            for (int x = 0; x < 3; ++x)
-//            {
-//                if (gameField.get_field_state(x, y) == EMPTY)
-//                {
-//                    gameField.circle_field(x, y);
-//                    score = minimax(x, y, depth - 1, alpha, beta, gameField, CROSS_PLAYER);
-//                    gameField.empty_field(x, y);
-//                    bestScore = std::min(score, bestScore);
-//                    //alpha-beta pruning (dwie linie)
-//                    beta = std::min(beta, score);
-//                    if (beta <= alpha)
-//                        return bestScore;
-//                }
-//            }
-//        }
-//        break;
-//    case CROSS_PLAYER:
-//        bestScore = INT_MIN;
-//        for (int y = 0; y < 3; ++y)
-//        {
-//            for (int x = 0; x < 3; ++x)
-//            {
-//                if (gameField.get_field_state(x, y) == EMPTY)
-//                {
-//                    gameField.cross_field(x, y);
-//                    score = minimax(x, y, depth - 1, alpha, beta, gameField, CIRCLE_PLAYER);
-//                    gameField.empty_field(x, y);
-//                    bestScore = std::max(score, bestScore);
-//                    //alpha-beta pruning (dwie linie)
-//                    alpha = std::max(alpha, score);
-//                    if (beta <= alpha)
-//                        return bestScore;
-//                }
-//            }
-//        }
-//        break;
-//    default:
-//        break;
-//    }
-//    return bestScore;
-//}
+/**
+* @brief Implementuje algorytm minimax z przycinaniem alpha-beta
+*
+* @param x - wspolrzedna x rozpatrywanego ruchu
+* @param y - wspolrzedna y rozpatrywanego ruchu
+* @param depth - gleboksc przegladania
+* @param alpha - wartosc zmiennej alpha (alpha-beta pruning)
+* @param beta - wartosc zmiennej beta (alpha-beta pruning)
+* @param gameField - obecnie rozpatrywana plansza
+* @param player - gracz wykonujacy ruch
+* @return int - jakosc danej planszy
+*/
+// int minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerEnum player)
+// {
+//     if (!depth || game.get_game_progress() != PLAYING)
+//     {
+//         return estimate_move(game, player, coord);
+//     }
+//     int bestScore = 0, score = 0;
+//     switch (player)
+//     {
+//     case BLACK:
+//         bestScore = INT_MAX;
+//         for(auto piece : game.pieces_with_moves(BLACK)){
+//             for(auto move : game.piece_moves(piece)){
+//                 game.try_make_move(piece, move);
+//                 score = minimax(coord, depth - 1, alpha, beta, game, WHITE);
+//                 game.
+//             }
+//             if (gameField.get_field_state(x, y) == EMPTY)
+//             {
+//                 gameField.circle_field(x, y);
+//                 score = minimax(x, y, depth - 1, alpha, beta, gameField, CROSS_PLAYER);
+//                 gameField.empty_field(x, y);
+//                 bestScore = std::min(score, bestScore);
+//                 //alpha-beta pruning (dwie linie)
+//                 beta = std::min(beta, score);
+//                 if (beta <= alpha)
+//                     return bestScore;
+//             }
+//         }
+//         for (int y = 0; y < 3; ++y)
+//         {
+//             for (int x = 0; x < 3; ++x)
+//             {
+//                 if (gameField.get_field_state(x, y) == EMPTY)
+//                 {
+//                     gameField.circle_field(x, y);
+//                     score = minimax(x, y, depth - 1, alpha, beta, gameField, CROSS_PLAYER);
+//                     gameField.empty_field(x, y);
+//                     bestScore = std::min(score, bestScore);
+//                     //alpha-beta pruning (dwie linie)
+//                     beta = std::min(beta, score);
+//                     if (beta <= alpha)
+//                         return bestScore;
+//                 }
+//             }
+//         }
+//         break;
+//     case WHITE:
+//         bestScore = INT_MIN;
+//         for (int y = 0; y < 3; ++y)
+//         {
+//             for (int x = 0; x < 3; ++x)
+//             {
+//                 if (gameField.get_field_state(x, y) == EMPTY)
+//                 {
+//                     gameField.cross_field(x, y);
+//                     score = minimax(x, y, depth - 1, alpha, beta, gameField, CIRCLE_PLAYER);
+//                     gameField.empty_field(x, y);
+//                     bestScore = std::max(score, bestScore);
+//                     //alpha-beta pruning (dwie linie)
+//                     alpha = std::max(alpha, score);
+//                     if (beta <= alpha)
+//                         return bestScore;
+//                 }
+//             }
+//         }
+//         break;
+//     default:
+//         break;
+//     }
+//     return bestScore;
+// }

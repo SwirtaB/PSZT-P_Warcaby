@@ -1,9 +1,9 @@
 /**
- * @file Utils.hpp
- * @author Bartosz Świrta
- * @brief Zawiera definicje GameProgressEnum i PlayerEnum
+ * @file Game.hpp
+ * @author Maciej Wojno
+ * @brief 
  * @version 1.0
- * @date 2021-01-10
+ * @date 
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -12,7 +12,6 @@
 
 #include <optional>
 #include <vector>
-
 #include <iostream>
 
 namespace checkers

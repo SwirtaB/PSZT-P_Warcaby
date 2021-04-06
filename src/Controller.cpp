@@ -67,12 +67,12 @@ void Controller::run()
         }
         else
         {
-//            std::pair<Coord, Coord> move = bot::bot_move(gameState, config.depth);
-//            std::this_thread::sleep_for(std::chrono::milliseconds(250));
-//            if (!gameState.try_make_move(move.first, move.second)) {
-//                std::cerr << "Bot tried to make illegal move!" << std::endl;
-//            }
-            send_state();
+            // std::pair<Coord, Coord> move = bot::bot_move(gameState, config.depth);
+            // std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            // if (!gameState.try_make_move(move.first, move.second)) {
+            //     std::cerr << "Bot tried to make illegal move!" << std::endl;
+            // }
+            // send_state();
         }
     }
 }

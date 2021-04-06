@@ -37,7 +37,7 @@ namespace checkers
          * @brief Uruchamia widok, przejmuje wątek na czas działania.
          * 
          */
-        void run() override { mahi::gui::Application::run(); }
+        void run() { mahi::gui::Application::run(); }
 
     private:
         /**
