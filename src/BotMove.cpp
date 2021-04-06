@@ -446,8 +446,7 @@ int estimate_move(const GameState &game, PlayerEnum player, Coord coord)
 /**
 * @brief Implementuje algorytm minimax z przycinaniem alpha-beta
 *
-* @param x - wspolrzedna x rozpatrywanego ruchu
-* @param y - wspolrzedna y rozpatrywanego ruchu
+* @param coord - koordynaty rozpatrywanej figury
 * @param depth - gleboksc przegladania
 * @param alpha - wartosc zmiennej alpha (alpha-beta pruning)
 * @param beta - wartosc zmiennej beta (alpha-beta pruning)
@@ -455,75 +454,67 @@ int estimate_move(const GameState &game, PlayerEnum player, Coord coord)
 * @param player - gracz wykonujacy ruch
 * @return int - jakosc danej planszy
 */
-// int minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerEnum player)
-// {
-//     if (!depth || game.get_game_progress() != PLAYING)
-//     {
-//         return estimate_move(game, player, coord);
-//     }
-//     int bestScore = 0, score = 0;
-//     switch (player)
-//     {
-//     case BLACK:
-//         bestScore = INT_MAX;
-//         for(auto piece : game.pieces_with_moves(BLACK)){
-//             for(auto move : game.piece_moves(piece)){
-//                 game.try_make_move(piece, move);
-//                 score = minimax(coord, depth - 1, alpha, beta, game, WHITE);
-//                 game.
-//             }
-//             if (gameField.get_field_state(x, y) == EMPTY)
-//             {
-//                 gameField.circle_field(x, y);
-//                 score = minimax(x, y, depth - 1, alpha, beta, gameField, CROSS_PLAYER);
-//                 gameField.empty_field(x, y);
-//                 bestScore = std::min(score, bestScore);
-//                 //alpha-beta pruning (dwie linie)
-//                 beta = std::min(beta, score);
-//                 if (beta <= alpha)
-//                     return bestScore;
-//             }
-//         }
-//         for (int y = 0; y < 3; ++y)
-//         {
-//             for (int x = 0; x < 3; ++x)
-//             {
-//                 if (gameField.get_field_state(x, y) == EMPTY)
-//                 {
-//                     gameField.circle_field(x, y);
-//                     score = minimax(x, y, depth - 1, alpha, beta, gameField, CROSS_PLAYER);
-//                     gameField.empty_field(x, y);
-//                     bestScore = std::min(score, bestScore);
-//                     //alpha-beta pruning (dwie linie)
-//                     beta = std::min(beta, score);
-//                     if (beta <= alpha)
-//                         return bestScore;
-//                 }
-//             }
-//         }
-//         break;
-//     case WHITE:
-//         bestScore = INT_MIN;
-//         for (int y = 0; y < 3; ++y)
-//         {
-//             for (int x = 0; x < 3; ++x)
-//             {
-//                 if (gameField.get_field_state(x, y) == EMPTY)
-//                 {
-//                     gameField.cross_field(x, y);
-//                     score = minimax(x, y, depth - 1, alpha, beta, gameField, CIRCLE_PLAYER);
-//                     gameField.empty_field(x, y);
-//                     bestScore = std::max(score, bestScore);
-//                     //alpha-beta pruning (dwie linie)
-//                     alpha = std::max(alpha, score);
-//                     if (beta <= alpha)
-//                         return bestScore;
-//                 }
-//             }
-//         }
-//         break;
-//     default:
-//         break;
-//     }
-//     return bestScore;
-// }
+int minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerEnum player)
+{
+    GameState localState = game;
+    if (!depth || localState.get_game_progress() != PLAYING)
+    {
+        return estimate_move(localState, player, coord);
+    }
+    int bestScore = 0, score = 0;
+    switch (player)
+    {
+    case BLACK:
+        bestScore = INT_MAX;
+        for(auto piece : localState.pieces_with_moves()){
+            for(auto move : localState.piece_moves(piece)){
+                if(localState.try_make_move(piece, move))
+                    score = minimax(coord, depth - 1, alpha, beta, localState, WHITE);
+                else
+                    return bestScore; // jeżeli będzie błąd to wychodzimy zwracając najlepszy znaleziony wynik
+                
+                //alpha-beta pruning (dwie linie)
+                bestScore = std::min(beta, score);
+                if(beta <= alpha)
+                    return bestScore;
+            }
+        }
+        break;
+    case WHITE:
+        bestScore = INT_MIN;
+        for(auto piece : localState.pieces_with_moves()){
+            for(auto move : localState.piece_moves(piece)){
+                if(localState.try_make_move(piece, move))
+                    score = minimax(coord, depth - 1, alpha, beta, localState, WHITE);
+                else
+                    return bestScore; // jeżeli będzie błąd to wychodzimy zwracając najlepszy znaleziony wynik
+                
+                //alpha-beta pruning (dwie linie)
+                bestScore = std::max(alpha, score);
+                if(beta <= alpha)
+                    return bestScore;
+            }
+        }
+        // for (int y = 0; y < 3; ++y)
+        // {
+        //     for (int x = 0; x < 3; ++x)
+        //     {
+        //         if (gameField.get_field_state(x, y) == EMPTY)
+        //         {
+        //             gameField.cross_field(x, y);
+        //             score = minimax(x, y, depth - 1, alpha, beta, gameField, CIRCLE_PLAYER);
+        //             gameField.empty_field(x, y);
+        //             bestScore = std::max(score, bestScore);
+        //             //alpha-beta pruning (dwie linie)
+        //             alpha = std::max(alpha, score);
+        //             if (beta <= alpha)
+        //                 return bestScore;
+        //         }
+        //     }
+        // }
+        break;
+    default:
+        break;
+    }
+    return bestScore;
+}
