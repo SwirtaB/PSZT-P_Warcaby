@@ -37,7 +37,7 @@ namespace checkers
          * @brief Uruchamia widok, przejmuje wątek na czas działania.
          * 
          */
-        void run() { mahi::gui::Application::run(); }
+        void run() override { mahi::gui::Application::run(); }
 
     private:
         /**
@@ -55,17 +55,17 @@ namespace checkers
          * 
          */
         void update() override;
+        static ImVec2 get_button_size() ;
         /**
          * @brief Wyświetla przycisk na planszy w podanym stanie.
          *
          */
-        ImVec2 get_button_size() const;
-        bool board_button(std::optional<PawnEnum> &pawn, bool is_selected, bool is_dark) const;
+        bool board_button(std::optional<PieceEnum> &pawn, bool is_selected, bool is_dark) const;
         /**
          * @brief Sprawdza czy przyszedł nowy stan od kontrolera.
          * 
          */
-        float View::get_font_scale() const;
+        float get_font_scale() const;
         void check_for_new_state();
         /**
          * @brief Wysyła akcję gracza do kontrolera.

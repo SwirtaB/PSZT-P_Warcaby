@@ -43,25 +43,16 @@ namespace checkers
         Config config;
         /// Stan razgrywki.
         GameState gameState;
+        std::optional<Coord> selectedField;
         /// Pośrednik komunikacji z widokiem.
         std::shared_ptr<MessageQueues> messageQueues;
 
-        /// Zainicjuj rozgrywkę z pustą planszą.
-        void init();
         /// Czy ruch ma wykonać gracz który nie jest botem.
         bool need_player_input() const;
         /// Odbierz akcję gracza od widoku.
         PlayerInputMessage get_player_input();
         /// Wyślij obacny stan gry do widoku.
         void send_state() const;
-        /// Spróbuj wybrać pionek o współrzędnych (x, y).
-        bool try_select_field(int x, int y);
-        /// Spróbuj wykonać ruch wybranym pionkiem na pozycję (x, y).
-        bool try_move_piece(int x, int y);
-        /// Zamień gracza który będzie teraz wykonywał ruch.
-        void flip_current_player();
-        /// Zwróć nowo sprawdzony stan gry.
-        GameProgressEnum check_game_progress() const;
         /// Zakończ pracę kontrolera, zapisz stan gry jeśli była w trakcie.
         void exit();
     };

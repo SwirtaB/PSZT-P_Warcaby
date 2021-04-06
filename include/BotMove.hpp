@@ -11,19 +11,16 @@
 
 #pragma once
 
-// TODO: adapt to checkers
+#include "Game.hpp"
+#include "Config.hpp"
 
-//#include "Game.hpp"
-//#include "Field.hpp"
-//#include "Config.hpp"
-//
-//namespace checkers::bot
-//{
-//    /**
-//     * @brief Zwraca ruch wykonywany przez bota za pomocą podanej taktyki.
-//     *
-//     * @param depth - glebokosc przeszukiwania
-//     * @return std::pair<int, int> - najlepszy mozliwy ruch
-//     */
-//    std::pair<int, int> bot_move(const FieldBoard &, PlayerEnum, ConfigBotTactic, int depth);
-//} // namespace checkers::bot
+namespace checkers::bot
+{
+    /**
+     * @brief Zwraca ruch wykonywany przez bota za pomocą podanej taktyki.
+     *
+     * @param depth - glebokosc przeszukiwania
+     * @return std::pair<int, int> - najlepszy mozliwy ruch
+     */
+    std::pair<int, int> bot_move(const GameState &, int depth);
+} // namespace checkers::bot

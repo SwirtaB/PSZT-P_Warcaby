@@ -66,7 +66,7 @@ void View::update()
     {
         GameProgressEnum &progress = lastState.value().gameProgressEnum;
         BoardState &boardState = lastState.value().boardState;
-        std::optional<Coord> &selected = boardState.selectedField;
+        std::optional<Coord> &selected = lastState->selectedField;
 
         if (progress == PLAYING) {
 
@@ -82,7 +82,6 @@ void View::update()
                     if (board_button(boardState.fields[x][y], is_selected, (x + y) % 2 == 0))
                     {
                         send_player_input(PlayerInputMessage(SELECT, x, y));
-                        std::cout << "Selected: " << x << " " << y << std::endl;
                     }
                     ImGui::NextColumn();
                 }
@@ -95,6 +94,8 @@ void View::update()
             ImGui::Text("White Won!");
         } else if (progress == BLACK_WON) {
             ImGui::Text("Black Won!");
+        } else if (progress == TIE) {
+            ImGui::Text("Tie!");
         }
     }
 
@@ -109,10 +110,10 @@ void View::update()
 float View::get_font_scale() const
 {
     float min_dimension = std::min(get_window_size().x, get_window_size().y);
-    return min_dimension / 250;
+    return min_dimension / 200;
 }
 
-ImVec2 View::get_button_size() const {
+ImVec2 View::get_button_size() {
     return ImVec2(45.0f, 45.0f);
 }
 
@@ -123,7 +124,7 @@ ImVec2 View::get_button_size() const {
  * @return true - gdy przycisk został poprawnie wyświetlony.
  * @return false - w przypadku błędu.
  */
-bool View::board_button(std::optional<PawnEnum> &pawn, bool is_selected, bool is_dark) const
+bool View::board_button(std::optional<PieceEnum> &pawn, bool is_selected, bool is_dark) const
 {
     if (is_selected) {
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 1.0f, 1.0f));
@@ -148,7 +149,7 @@ bool View::board_button(std::optional<PawnEnum> &pawn, bool is_selected, bool is
                 break;
             case BLACK_QUEEN:
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                pressed = ImGui::Button("O", get_button_size());
+                pressed = ImGui::Button("Q", get_button_size());
                 ImGui::PopStyleColor();
                 break;
             case WHITE_PAWN:
@@ -158,7 +159,7 @@ bool View::board_button(std::optional<PawnEnum> &pawn, bool is_selected, bool is
                 break;
             case WHITE_QUEEN:
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 1.0, 1.0, 1.0));
-                pressed = ImGui::Button("O", get_button_size());
+                pressed = ImGui::Button("Q", get_button_size());
                 ImGui::PopStyleColor();
                 break;
             default:

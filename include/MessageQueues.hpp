@@ -25,11 +25,12 @@ namespace checkers
      */
     struct GameStateMessage
     {
-        GameStateMessage(GameProgressEnum gp, BoardState bs)
-            : gameProgressEnum(gp), boardState(bs) {}
+        GameStateMessage(GameProgressEnum gp, BoardState bs, std::optional<Coord> sf)
+            : gameProgressEnum(gp), boardState(bs), selectedField(sf) {}
 
         GameProgressEnum gameProgressEnum;
         BoardState boardState;
+        std::optional<Coord> selectedField;
     };
 
     /**

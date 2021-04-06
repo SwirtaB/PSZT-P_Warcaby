@@ -9,8 +9,12 @@
  * 
  */
 
-// TODO: adapt to checkers
 
+
+//TODO: adapt to checkers
+//
+//
+//
 //#include "../include/BotMove.hpp"
 //#include <climits>
 //
