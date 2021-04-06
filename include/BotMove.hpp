@@ -16,11 +16,20 @@
 
 namespace checkers::bot
 {
+    const int basicHeuristicTable[] = {1, 2, 1, 2};
+
+    enum HeuristicEnum
+    {
+        BASIC,
+        BETTER
+    };
+
     /**
      * @brief Zwraca ruch wykonywany przez bota za pomocą podanej taktyki.
      *
      * @param depth - glebokosc przeszukiwania
      * @return std::pair<int, int> - najlepszy mozliwy ruch
      */
-    std::pair<int, int> bot_move(const GameState &, int depth);
+    std::pair<Coord, Coord> bot_move(const GameState &, PlayerEnum player, HeuristicEnum heuristicType, int depth);
+    int minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerEnum player);
 } // namespace checkers::bot

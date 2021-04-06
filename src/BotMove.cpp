@@ -13,91 +13,62 @@
 #include <climits>
 
 using namespace checkers;
+using namespace checkers::bot;
 
-///**
-// * @brief Implemetuje obsluge ruchu bot'a. Wywoluje odpowiednie funkcje w zaleznosci od wartosci wczytanych z pliku konfiguracyjnego.
-// *
-// * @param fieldBoard - rozpatrywana plansza
-// * @param player - ktory gracz ma wykonac ruch
-// * @param tactic - taktyka uzywana przez bot'a
-// * @param depth - glebokosc przegladania
-// * @return std::pair<int, int> - najlepszy mozliwy ruch
-// */
-//std::pair<int, int> ox::bot::bot_move(const FieldBoard &fieldBoard, PlayerEnum player, ConfigBotTactic tactic, int depth)
-//{
-//    FieldBoard tmpField = fieldBoard;
-//    std::pair<int, int> bestMove;
-//    int bestScore = 0, score = 0;
-//
-//    switch (player)
-//    {
-//    case CIRCLE_PLAYER:
-//        bestScore = INT_MAX;
-//        for (int y = 0; y < 3; ++y)
-//        {
-//            for (int x = 0; x < 3; ++x)
-//            {
-//                if (fieldBoard.get_field_state(x, y) == EMPTY)
-//                {
-//                    if (tactic == HEURISTIC)
-//                    {
-//                        tmpField.circle_field(x, y);
-//                        score = estimate_move(tmpField, player, x, y);
-//                        tmpField.empty_field(x, y);
-//                    }
-//                    else // config.bot_tactic == GAME_TREE
-//                    {
-//                        tmpField.circle_field(x, y);
-//                        /*alpha = INT_MIN, beta = INT_MAX do alpha-beta pruning'u*/
-//                        score = minimax(x, y, depth - 1, INT_MIN, INT_MAX, tmpField, CROSS_PLAYER);
-//                        tmpField.empty_field(x, y);
-//                    }
-//                    if (bestScore > score)
-//                    {
-//                        bestScore = score;
-//                        bestMove.first = x;
-//                        bestMove.second = y;
-//                    }
-//                }
-//            }
-//        }
-//        break;
-//    case CROSS_PLAYER:
-//        bestScore = INT_MIN;
-//        for (int y = 0; y < 3; ++y)
-//        {
-//            for (int x = 0; x < 3; ++x)
-//            {
-//                if (fieldBoard.get_field_state(x, y) == EMPTY)
-//                {
-//                    if (tactic == HEURISTIC)
-//                    {
-//                        tmpField.cross_field(x, y);
-//                        score = estimate_move(tmpField, player, x, y);
-//                        tmpField.empty_field(x, y);
-//                    }
-//                    else // config.bot_tactic == GAME_TREE
-//                    {
-//                        tmpField.cross_field(x, y);
-//                        /*alpha = INT_MIN, beta = INT_MAX do alpha-beta pruning'u*/
-//                        score = minimax(x, y, depth - 1, INT_MIN, INT_MAX, tmpField, CIRCLE_PLAYER);
-//                        tmpField.empty_field(x, y);
-//                    }
-//                    if (bestScore < score)
-//                    {
-//                        bestScore = score;
-//                        bestMove.first = x;
-//                        bestMove.second = y;
-//                    }
-//                }
-//            }
-//        }
-//        break;
-//    default:
-//        break;
-//    }
-//    return bestMove;
-//}
+/**
+ * @brief Implemetuje obsluge ruchu bot'a. Wywoluje odpowiednie funkcje w zaleznosci od wartosci wczytanych z pliku konfiguracyjnego.
+ *
+ * @param fieldBoard - rozpatrywana plansza
+ * @param player - ktory gracz ma wykonac ruch
+ * @param tactic - taktyka uzywana przez bot'a
+ * @param depth - glebokosc przegladania
+ * @return std::pair<int, int> - najlepszy mozliwy ruch
+ */
+std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, PlayerEnum player, HeuristicEnum heuristicType, int depth)
+{
+    GameState localState = gameState;
+    std::pair<Coord, Coord> bestMove = std::make_pair(Coord(0,0), Coord(0,0));
+    int bestScore = 0, score = 0;
+
+    switch (player)
+    {
+    case BLACK:
+        bestScore = INT_MAX;
+        for(auto piece : localState.pieces_with_moves()) {
+            for (auto move : localState.piece_moves(piece)) {
+                if (localState.try_make_move(piece, move))
+                    score = minimax(move, depth - 1, INT_MIN, INT_MAX, localState, WHITE);
+
+                if (bestScore > score)
+                {
+                    bestScore = score;
+                    bestMove.first = piece;
+                    bestMove.second = move;
+                }
+            }
+        }
+        break;
+    case WHITE:
+        bestScore = INT_MIN;
+        for(auto piece : localState.pieces_with_moves()) {
+            for (auto move : localState.piece_moves(piece)) {
+                if (localState.try_make_move(piece, move))
+                    score = minimax(move, depth - 1, INT_MIN, INT_MAX, localState, BLACK);
+
+                if (bestScore < score)
+                {
+                    bestScore = score;
+                    bestMove.first = piece;
+                    bestMove.second = move;
+                }
+            }
+        }
+        break;
+    default:
+        break;
+    }
+    return bestMove;
+}
 
 /* Biały MAKSYMALIZUJE wynik, czarny MINIMALIZUJE wynik
  * int basicHeuristicTable = {  waga mojego piona,      - mm
@@ -123,9 +94,57 @@ using namespace checkers;
  * 
  * Podsumowując, uciekamy jak tylko się da, chyba że pojawia się okazja zbicia damy przeciwnika
 */ 
-int estimate_move(const GameState &game, PlayerEnum player, Coord coord)
+
+int basic_heuristic(const GameState &gameState, PlayerEnum player, Coord coord){
+    BoardState board = gameState.get_board_state();
+    int score = 0;
+    int whitePawns = 0, whiteQueens = 0, blackPawns = 0, blackQueens = 0;
+    for(int i = 0; i < 8; ++i){
+        for(int j = 0; j < 8; ++j){
+            if(board.fields[i][j].has_value()){
+                switch (board.fields[i][j].value())
+                {
+                    case WHITE_PAWN:
+                        ++whitePawns;
+                        break;
+                    case WHITE_QUEEN:
+                        ++whiteQueens;
+                        break;
+                    case BLACK_PAWN:
+                        ++blackPawns;
+                        break;
+                    case BLACK_QUEEN:
+                        ++blackQueens;
+                        break;
+                }
+            } 
+        }
+    }
+    switch (player)
+    {
+        case WHITE:
+            score = basicHeuristicTable[1]*whiteQueens + basicHeuristicTable[0]*whitePawns - (basicHeuristicTable[3]*blackQueens + basicHeuristicTable[2]*blackPawns);
+            break;
+        case BLACK:
+            score = basicHeuristicTable[3]*blackQueens + basicHeuristicTable[2]*blackPawns - (basicHeuristicTable[1]*whiteQueens + basicHeuristicTable[0]*whitePawns);
+            break;
+        default:
+            break; //score = 0
+    }
+    return score;    
+}
+
+/**
+ * @brief 
+ * 
+ * @param game - obecnie rozpatrywana plansza
+ * @param player - który gracz wykonuj ruch
+ * @param coord - struktura z współrzędnymi rozpatrywanego ruchu
+ * @return int - jakosc danej planszy (w konsekwencji rowniez rozpatrywanego ruchu)
+ */
+int estimate_move(const GameState &gameState, PlayerEnum player, Coord coord)
 {
-    switch(game.get_game_progress())
+    switch(gameState.get_game_progress())
     {
         case WHITE_WON:
             return 100;
@@ -136,313 +155,27 @@ int estimate_move(const GameState &game, PlayerEnum player, Coord coord)
         default:
             break;
     }
-    int score = 0;
-    switch(player)
-    {
-        case WHITE:
-            //funkcja heurystyczna
-            score = 0;
-            break;
-        case BLACK:
-            //funkcja heurystyczna
-            score = 0;
-            break;
-        default:
-            score = 0;
-            break;
-    }
+    int score = basic_heuristic(gameState, player, coord);
+    // int score = 0;
+    // switch(player)
+    // {
+    //     case WHITE:
+    //         //funkcja heurystyczna
+    //         score = 0;
+    //         break;
+    //     case BLACK:
+    //         //funkcja heurystyczna
+    //         score = 0;
+    //         break;
+    //     default:
+    //         score = 0;
+    //         break;
+    // }
     return score;
 }
 
 
-///**
-// * @brief Funkcja ktora estymuje "jakosc" planszy dla danego gracza. Kolko minimalizuje jakosc, krzyzyk maksymalizuje jakosc
-// *
-// * @param gameField - obecnie rozpatrywana plansza
-// * @param player - ktory gracz wykonuje ruch
-// * @param x - wpsolrzedna x rozpatrywanego ruchu
-// * @param y - wspolrzedna y rozpatrywanego ruchu
-// * @return int - jakosc danej planszy (w konsekwencji rowniez rozpatrywanego ruchu)
-// */
-//int estimate_move(const FieldBoard &gameField, PlayerEnum player, int x, int y)
-//{
-//    switch (gameField.check_state())
-//    {
-//    case CIRCLE_WON:
-//        return -4;
-//    case CROSS_WON:
-//        return 4;
-//    case TIE:
-//        return 0;
-//    default:
-//        break;
-//    }
-//
-//    int bestScore = 0, score = 0, xCounter = 0, oCounter = 0, eCounter = 0;
-//    switch (player)
-//    {
-//    case CIRCLE_PLAYER:
-//        score = INT_MAX;
-//        /*sprawdzam wiersz*/
-//        for (int i = 0; i < 3; ++i)
-//        {
-//            switch (gameField.get_field_state(i, y))
-//            {
-//            case EMPTY:
-//                ++eCounter;
-//                break;
-//            case CIRCLED:
-//                ++oCounter;
-//                break;
-//            case CROSSED:
-//                ++xCounter;
-//                break;
-//            default:
-//                break;
-//            }
-//        }
-//        if (oCounter == 1 && xCounter == 0)
-//            score = -1;
-//        else if (oCounter == 2 && xCounter == 0)
-//            score = -2;
-//        else if (xCounter == 2)
-//            score = -3;
-//        else
-//            score = 0;
-//        bestScore = std::min(bestScore, score);
-//        eCounter = 0;
-//        oCounter = 0;
-//        xCounter = 0;
-//
-//        /*sprawdzam kolumne*/
-//        for (int i = 0; i < 3; ++i)
-//        {
-//            switch (gameField.get_field_state(x, i))
-//            {
-//            case EMPTY:
-//                ++eCounter;
-//                break;
-//            case CIRCLED:
-//                ++oCounter;
-//                break;
-//            case CROSSED:
-//                ++xCounter;
-//                break;
-//            default:
-//                break;
-//            }
-//        }
-//        if (oCounter == 1 && xCounter == 0)
-//            score = -1;
-//        else if (oCounter == 2 && xCounter == 0)
-//            score = -2;
-//        else if (xCounter == 2)
-//            score = -3;
-//        else
-//            score = 0;
-//        bestScore = std::min(bestScore, score);
-//        eCounter = 0;
-//        oCounter = 0;
-//        xCounter = 0;
-//
-//        /*sprawdzam przekatne*/
-//        if (x == 0 && y == 0 || x == 1 && y == 1 || x == 2 && y == 2)
-//        {
-//            for (int i = 0, j = 0; i < 3; ++i, ++j)
-//            {
-//                switch (gameField.get_field_state(i, j))
-//                {
-//                case EMPTY:
-//                    ++eCounter;
-//                    break;
-//                case CIRCLED:
-//                    ++oCounter;
-//                    break;
-//                case CROSSED:
-//                    ++xCounter;
-//                    break;
-//                default:
-//                    break;
-//                }
-//            }
-//            if (oCounter == 1 && xCounter == 0)
-//                score = -1;
-//            else if (oCounter == 2 && xCounter == 0)
-//                score = -2;
-//            else if (xCounter == 2)
-//                score = -3;
-//            else
-//                score = 0;
-//            bestScore = std::min(bestScore, score);
-//            eCounter = 0;
-//            oCounter = 0;
-//            xCounter = 0;
-//        }
-//
-//        if (x == 2 && y == 0 || x == 1 && y == 1 || x == 0 && y == 2)
-//        {
-//            for (int i = 2, j = 0; i >= 0; --i, ++j)
-//            {
-//                switch (gameField.get_field_state(i, j))
-//                {
-//                case EMPTY:
-//                    ++eCounter;
-//                    break;
-//                case CIRCLED:
-//                    ++oCounter;
-//                    break;
-//                case CROSSED:
-//                    ++xCounter;
-//                    break;
-//                default:
-//                    break;
-//                }
-//            }
-//            if (oCounter == 1 && xCounter == 0)
-//                score = -1;
-//            else if (oCounter == 2 && xCounter == 0)
-//                score = -2;
-//            else if (xCounter == 2)
-//                score = -3;
-//            else
-//                score = 0;
-//            bestScore = std::min(bestScore, score);
-//        }
-//        break;
-//
-//    case CROSS_PLAYER:
-//        score = INT_MIN;
-//        /*sprawdzam wiersz*/
-//        for (int i = 0; i < 3; ++i)
-//        {
-//            switch (gameField.get_field_state(i, y))
-//            {
-//            case EMPTY:
-//                ++eCounter;
-//                break;
-//            case CIRCLED:
-//                ++oCounter;
-//                break;
-//            case CROSSED:
-//                ++xCounter;
-//                break;
-//            default:
-//                break;
-//            }
-//        }
-//        if (xCounter == 1 && oCounter == 0)
-//            score = 1;
-//        else if (xCounter == 2 && oCounter == 0)
-//            score = 2;
-//        else if (oCounter == 2)
-//            score = 3;
-//        else
-//            score = 0;
-//        bestScore = std::max(bestScore, score);
-//        eCounter = 0;
-//        oCounter = 0;
-//        xCounter = 0;
-//
-//        /*sprawdzam kolumne*/
-//        for (int i = 0; i < 3; ++i)
-//        {
-//            switch (gameField.get_field_state(x, i))
-//            {
-//            case EMPTY:
-//                ++eCounter;
-//                break;
-//            case CIRCLED:
-//                ++oCounter;
-//                break;
-//            case CROSSED:
-//                ++xCounter;
-//                break;
-//            default:
-//                break;
-//            }
-//        }
-//        if (xCounter == 1 && oCounter == 0)
-//            score = 1;
-//        else if (xCounter == 2 && oCounter == 0)
-//            score = 2;
-//        else if (oCounter == 2)
-//            score = 3;
-//        else
-//            score = 0;
-//        bestScore = std::max(bestScore, score);
-//        eCounter = 0;
-//        oCounter = 0;
-//        xCounter = 0;
-//
-//        /*sprawdzam przekatne*/
-//        if (x == 0 && y == 0 || x == 1 && y == 1 || x == 2 && y == 2)
-//        {
-//            for (int i = 0, j = 0; i < 3; ++i, ++j)
-//            {
-//                switch (gameField.get_field_state(i, j))
-//                {
-//                case EMPTY:
-//                    ++eCounter;
-//                    break;
-//                case CIRCLED:
-//                    ++oCounter;
-//                    break;
-//                case CROSSED:
-//                    ++xCounter;
-//                    break;
-//                default:
-//                    break;
-//                }
-//            }
-//            if (xCounter == 1 && oCounter == 0)
-//                score = 1;
-//            else if (xCounter == 2 && oCounter == 0)
-//                score = 2;
-//            else if (oCounter == 2)
-//                score = 3;
-//            else
-//                score = 0;
-//            bestScore = std::max(bestScore, score);
-//            eCounter = 0;
-//            oCounter = 0;
-//            xCounter = 0;
-//        }
-//
-//        if (x == 2 && y == 0 || x == 1 && y == 1 || x == 0 && y == 2)
-//        {
-//            for (int i = 2, j = 0; i >= 0; --i, ++j)
-//            {
-//                switch (gameField.get_field_state(i, j))
-//                {
-//                case EMPTY:
-//                    ++eCounter;
-//                    break;
-//                case CIRCLED:
-//                    ++oCounter;
-//                    break;
-//                case CROSSED:
-//                    ++xCounter;
-//                    break;
-//                default:
-//                    break;
-//                }
-//            }
-//            if (xCounter == 1 && oCounter == 0)
-//                score = 1;
-//            else if (xCounter == 2 && oCounter == 0)
-//                score = 2;
-//            else if (oCounter == 2)
-//                score = 3;
-//            else
-//                score = 0;
-//            bestScore = std::max(bestScore, score);
-//        }
-//        break;
-//    default:
-//        break;
-//    }
-//    return bestScore;
-//}
+
 /**
 * @brief Implementuje algorytm minimax z przycinaniem alpha-beta
 *
@@ -454,7 +187,7 @@ int estimate_move(const GameState &game, PlayerEnum player, Coord coord)
 * @param player - gracz wykonujacy ruch
 * @return int - jakosc danej planszy
 */
-int minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerEnum player)
+int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerEnum player)
 {
     GameState localState = game;
     if (!depth || localState.get_game_progress() != PLAYING)
@@ -469,7 +202,7 @@ int minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerE
         for(auto piece : localState.pieces_with_moves()){
             for(auto move : localState.piece_moves(piece)){
                 if(localState.try_make_move(piece, move))
-                    score = minimax(coord, depth - 1, alpha, beta, localState, WHITE);
+                    score = minimax(move, depth - 1, alpha, beta, localState, WHITE);
                 else
                     return bestScore; // jeżeli będzie błąd to wychodzimy zwracając najlepszy znaleziony wynik
                 
@@ -485,7 +218,7 @@ int minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerE
         for(auto piece : localState.pieces_with_moves()){
             for(auto move : localState.piece_moves(piece)){
                 if(localState.try_make_move(piece, move))
-                    score = minimax(coord, depth - 1, alpha, beta, localState, WHITE);
+                    score = minimax(move, depth - 1, alpha, beta, localState, BLACK);
                 else
                     return bestScore; // jeżeli będzie błąd to wychodzimy zwracając najlepszy znaleziony wynik
                 

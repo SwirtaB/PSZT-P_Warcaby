@@ -10,7 +10,7 @@
  */
 
 #include "../include/Controller.hpp"
-//#include "../include/BotMove.hpp"
+#include "../include/BotMove.hpp"
 
 #include <chrono>
 #include <thread>
@@ -41,7 +41,7 @@ void Controller::run()
 {
     while (true)
     {
-        if (true) //need_player_input())  <- replace "true" with right side after fixing the other branch
+        if (need_player_input()) //need_player_input())  <- replace "true" with right side after fixing the other branch
         {
             PlayerInputMessage message = get_player_input();
             switch (message.messageType)
@@ -67,12 +67,12 @@ void Controller::run()
         }
         else
         {
-            // std::pair<Coord, Coord> move = bot::bot_move(gameState, config.depth);
-            // std::this_thread::sleep_for(std::chrono::milliseconds(250));
-            // if (!gameState.try_make_move(move.first, move.second)) {
-            //     std::cerr << "Bot tried to make illegal move!" << std::endl;
-            // }
-            // send_state();
+             std::pair<Coord, Coord> move = bot::bot_move(gameState, gameState.get_current_player(), bot::BASIC, config.depth);
+             std::this_thread::sleep_for(std::chrono::milliseconds(250));
+             if (!gameState.try_make_move(move.first, move.second)) {
+                 std::cerr << "Bot tried to make illegal move!" << " "  << gameState.get_current_player() << "x: " << move.second.x << "y: " << move.second.y << std::endl;
+             }
+             send_state();
         }
     }
 }
