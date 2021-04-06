@@ -8,9 +8,12 @@
  * @copyright Copyright (c) 2021
  * 
  */
+
+#include <optional>
+
 #include "../include/View.hpp"
 
-using namespace ox;
+using namespace checkers;
 
 /**
  * @brief Konstruktor widoku z podaną konfiguracją.
@@ -19,27 +22,12 @@ using namespace ox;
  * @param config - konifuracja używana przy tworzeniu widoku.
  * @param messageQueues_ - uchwyt do kolejki komunikatów.
  */
-View::View(ox::Config &config, std::shared_ptr<MessageQueues> messageQueues_)
-    : Application(300, 300, "OX", config.ui_size == RESIZABLE ? true : false), messageQueues(messageQueues_), lastState()
+View::View(std::shared_ptr<MessageQueues> messageQueues_)
+    : Application(400, 400, "Checkers", false)
+    , messageQueues(std::move(messageQueues_))
+    , lastState()
 {
-    switch (config.ui_size)
-    {
-    case SMALL:
-        set_window_size(300, 300);
-        break;
-
-    case MEDIUM:
-        set_window_size(600, 600);
-        break;
-
-    case LARGE:
-        set_window_size(900, 900);
-        break;
-
-    case RESIZABLE:
-        set_window_size(300, 300);
-        break;
-    }
+//    set_window_size(400, 400);
 }
 
 View::~View()
@@ -70,120 +58,48 @@ void View::update()
     ImGui::SetNextWindowSize(get_window_size());
     ImGui::SetNextWindowPos(get_window_pos());
     ImGui::Begin("window", nullptr, IMGUI_WINDOW_FLAGS);
-    ImGui::SetWindowFontScale(get_font_scale()); // TEST
+    ImGui::SetWindowFontScale(get_font_scale());
 
     check_for_new_state();
 
-    if (lastState.has_value())
+    if (lastState)
     {
-        GameStateEnum &state = lastState.value().gameStateEnum;
-        FieldBoard &fields = lastState.value().fieldBoard;
+        GameProgressEnum &progress = lastState.value().gameProgressEnum;
+        BoardState &boardState = lastState.value().boardState;
+        std::optional<Coord> &selected = lastState->selectedField;
 
-        switch (state)
-        {
-        case PREPARING:
-            update_preparing();
-            break;
+        if (progress == PLAYING) {
 
-        case LOAD_SAVE_QUESTION:
-            update_load_save_question();
-            break;
+            ImGui::Columns(8, nullptr, false);
 
-        case PLAYING:
-            update_game_in_progress(fields);
-            break;
+            for (int y = 7; y >= 0; --y)
+            {
+                for (int x = 0; x < 8; ++x)
+                {
+                    ImGui::PushID("b");
 
-        case CIRCLE_WON:
-            update_game_finished(PlayerEnum::CIRCLE_PLAYER);
-            break;
+                    bool is_selected = selected && selected.value().x == x && selected.value().y == y;
+                    if (board_button(boardState.fields[x][y], is_selected, (x + y) % 2 == 0))
+                    {
+                        send_player_input(PlayerInputMessage(SELECT, x, y));
+                    }
+                    ImGui::NextColumn();
+                }
+            }
+            for (int i = 0; i < 64; ++i) {
+                ImGui::PopID();
+            }
 
-        case CROSS_WON:
-            update_game_finished(PlayerEnum::CROSS_PLAYER);
-            break;
-
-        case TIE:
-            update_game_finished(PlayerEnum::NONE);
-            break;
+        } else if (progress == WHITE_WON) {
+            ImGui::Text("White Won!");
+        } else if (progress == BLACK_WON) {
+            ImGui::Text("Black Won!");
+        } else if (progress == TIE) {
+            ImGui::Text("Tie!");
         }
-    }
-    else
-    {
-        update_preparing();
     }
 
     ImGui::End();
-}
-
-/**
- * @brief Aktualizacja interfejsu w stanie gry PREPARING. 
- * @details Wyświetla pust panel.
- * 
- */
-void View::update_preparing()
-{
-}
-
-/**
- * @brief Aktualizacja interfejsu w stanie gry LOAD_SAVE_QUESTION. 
- * @details Wyświetla pytanie o wczytanie zapisanego stanu gry.
- * 
- */
-void View::update_load_save_question()
-{
-    ImGui::Text("Load saved state?");
-
-    if (ImGui::Button("Yes"))
-    {
-        send_player_input(PlayerInputMessage(LOAD_SAVE, 0, 0));
-    }
-    ImGui::PushID("b");
-    if (ImGui::Button("No"))
-    {
-        send_player_input(PlayerInputMessage(NO_LOAD_SAVE, 0, 0));
-    }
-    ImGui::PopID();
-}
-
-/**
- * @brief Aktualizacja interfejsu w stanie gry IN_PROGRESS.
- * @details Wyświetla planszę gry i pozwala graczowi wybierać pole.
- * 
- * @param fields - aktualna plansza.
- */
-void View::update_game_in_progress(FieldBoard &fields)
-{
-    ImGui::Columns(3, nullptr, false);
-
-    for (int y = 0; y < 3; ++y)
-    {
-        for (int x = 0; x < 3; ++x)
-        {
-            if (field_button(fields.get_field_state(x, y)))
-            {
-                send_player_input(PlayerInputMessage(INPUT, x, y));
-                std::cout << x << " " << y << std::endl;
-            }
-            if (y != 3)
-                ImGui::NextColumn();
-            ImGui::PushID("b");
-        }
-    }
-    for (int i = 0; i < 9; ++i)
-        ImGui::PopID();
-}
-
-/**
- * @brief Aktualizacja interfejsu w stanie gry FINISHED.
- * @details Wyświetla informację o zwycięzcy i pozwala wywołac kolejną rozgrywkę.
- * 
- * @param player - gracz który wygrał.
- */
-void View::update_game_finished(PlayerEnum player)
-{
-    if (player == CIRCLE_PLAYER && ImGui::Button("Circle won!", get_window_size()) || player == CROSS_PLAYER && ImGui::Button("Cross won!", get_window_size()) || player == NONE && ImGui::Button("Tie!", get_window_size()))
-    {
-        send_player_input(PlayerInputMessage(RESET_GAME, 0, 0));
-    }
 }
 
 /**
@@ -194,7 +110,11 @@ void View::update_game_finished(PlayerEnum player)
 float View::get_font_scale() const
 {
     float min_dimension = std::min(get_window_size().x, get_window_size().y);
-    return min_dimension / 300;
+    return min_dimension / 200;
+}
+
+ImVec2 View::get_button_size() {
+    return ImVec2(45.0f, 45.0f);
 }
 
 /**
@@ -204,19 +124,51 @@ float View::get_font_scale() const
  * @return true - gdy przycisk został poprawnie wyświetlony.
  * @return false - w przypadku błędu.
  */
-bool View::field_button(FieldState state) const
+bool View::board_button(std::optional<PieceEnum> &pawn, bool is_selected, bool is_dark) const
 {
-    switch (state)
-    {
-    case EMPTY:
-        return ImGui::Button("", get_window_size() / 3);
-    case CIRCLED:
-        return ImGui::Button("O", get_window_size() / 3);
-    case CROSSED:
-        return ImGui::Button("X", get_window_size() / 3);
-    default:
-        return ImGui::Button("Error", get_window_size() / 3);
+    if (is_selected) {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 1.0f, 1.0f));
+    } else {
+        if (is_dark) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+        } else {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
+        }
     }
+
+    bool pressed = false;
+    if (!pawn.has_value()) {
+        pressed = ImGui::Button("", get_button_size());
+    } else {
+        switch (pawn.value())
+        {
+            case BLACK_PAWN:
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                pressed = ImGui::Button("o", get_button_size());
+                ImGui::PopStyleColor();
+                break;
+            case BLACK_QUEEN:
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                pressed = ImGui::Button("Q", get_button_size());
+                ImGui::PopStyleColor();
+                break;
+            case WHITE_PAWN:
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+                pressed = ImGui::Button("o", get_button_size());
+                ImGui::PopStyleColor();
+                break;
+            case WHITE_QUEEN:
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0, 1.0, 1.0, 1.0));
+                pressed = ImGui::Button("Q", get_button_size());
+                ImGui::PopStyleColor();
+                break;
+            default:
+                ImGui::Button("Error", get_button_size());
+        }
+    }
+
+    ImGui::PopStyleColor();
+    return pressed;
 }
 
 /**

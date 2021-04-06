@@ -8,18 +8,6 @@ include(FetchContent)
 FetchContent_Declare(mahi-gui GIT_REPOSITORY https://github.com/mahilab/mahi-gui.git) 
 FetchContent_MakeAvailable(mahi-gui)
 
-if (WIN32)
-    find_package(Python 3.8 REQUIRED)
-    find_package(PythonLibs 3.8 REQUIRED)
-elseif (UNIX)
-    find_package(Boost 1.71.0 REQUIRED COMPONENTS python38)
-    find_package(Python 3.8 REQUIRED)
-    find_package(PythonLibs 3.8 REQUIRED)
-endif ()
-
-set(Boost_USE_STATIC_LIBS ON)
-set(CMAKE_SHARED_MODULE_PREFIX "")
-
 file(GLOB TARGET_SRC "./src/*.cpp" )
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_HOME_DIRECTORY}/bin)
 set(CMAKE_EXPORT_COMPILE_COMMANDS)
@@ -28,16 +16,16 @@ set(EXECUTABLE_NAME "pszt_warcaby")
 include_directories(${CMAKE_HOME_DIRECTORY}/include)
 add_executable(${EXECUTABLE_NAME} ${TARGET_SRC})
 
-if (WIN32)
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${PYTHON_INCLUDE_DIRS})
-    target_link_libraries(${EXECUTABLE_NAME} mahi::gui ${PYTHON_LIBRARIES})
-elseif (UNIX)
-    target_include_directories(${EXECUTABLE_NAME} PRIVATE ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
-    target_link_libraries(${EXECUTABLE_NAME} mahi::gui Boost::python38 ${PYTHON_LIBRARIES})
-endif ()
+target_link_libraries(${EXECUTABLE_NAME} mahi::gui)
+
+if(MSVC)
+    target_compile_options(${EXECUTABLE_NAME} PRIVATE /W4)
+else()
+    target_compile_options(${EXECUTABLE_NAME} PRIVATE -Wall -Wextra -pedantic)
+endif()
 
 
-#Add tests -> building program for testing with boost
+# Add tests -> building program for testing with boost
 set(BUILD_TESTS True) #Set to "True" for test for building tests
 
 if(BUILD_TESTS)
@@ -52,11 +40,9 @@ if(BUILD_TESTS)
     add_executable(tests ${CMAKE_HOME_DIRECTORY}/tests/Tests.cpp ${TARGET_SRC} tests/Tests.cpp)
 
     if (WIN32)
-        target_include_directories(tests PRIVATE ${PYTHON_INCLUDE_DIRS})
-        target_link_libraries(tests mahi::gui ${PYTHON_LIBRARIES})
+        target_link_libraries(tests mahi::gui)
     elseif (UNIX)
-        target_include_directories(tests PRIVATE ${PYTHON_INCLUDE_DIRS})
-        target_link_libraries(tests mahi::gui Boost::python38 ${PYTHON_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+        target_link_libraries(tests mahi::gui ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
     endif ()
 
     add_test(UnitTest tests)

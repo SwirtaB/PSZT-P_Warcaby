@@ -10,12 +10,13 @@
  */
 #pragma once
 
-#include "../include/MessageQueues.hpp"
-#include "../include/Config.hpp"
-
 #include <optional>
 
-namespace ox
+#include "MessageQueues.hpp"
+#include "Game.hpp"
+#include "Config.hpp"
+
+namespace checkers
 {
     /**
      * @brief Kontroler gry.
@@ -30,50 +31,30 @@ namespace ox
          *        Komunikuje się z widokiem za pomocą podanego wspólnego pośrednika.
          * 
          */
-        Controller(Config &config, std::shared_ptr<MessageQueues> queuesHandler_);
+        Controller(Config &config_, std::shared_ptr<MessageQueues> queuesHandler_);
         /**
-         * @brief Uruchamia kontroler, przejmuje wątek na czas działania.
+         * @brief Uruchamia kontroler, przejmuje wątek na czas działania. Pętla rozgrywki.
          * 
          */
         void run();
 
     private:
-        /// Stan/faza razgrywki.
-        GameStateEnum gameState;
-        /// Obecny stan planszy gry.
-        FieldBoard fieldBoard;
+        /// Konfiguracja rozgrywki.
+        Config config;
+        /// Stan razgrywki.
+        GameState gameState;
+        std::optional<Coord> selectedField;
         /// Pośrednik komunikacji z widokiem.
         std::shared_ptr<MessageQueues> messageQueues;
-        /// Konfiguracja gry.
-        Config config;
-        /// Który gracz ma wykonać teraz ruch.
-        PlayerEnum currentPlayer;
-        /// Zapis gry wczytany przy uruchamianiu.
-        std::optional<std::pair<FieldBoard, PlayerEnum>> loadedSave;
 
-        /// Zainicjuj rozgrywkę z pustą planszą.
-        void init();
         /// Czy ruch ma wykonać gracz który nie jest botem.
         bool need_player_input() const;
         /// Odbierz akcję gracza od widoku.
         PlayerInputMessage get_player_input();
         /// Wyślij obacny stan gry do widoku.
         void send_state() const;
-        /// Spróbuj wykonać ruch podanego gracza na danym polu.
-        bool select_field(int x, int y, PlayerEnum player);
-        /// Zamień gracza który będzie teraz wykonywał ruch.
-        void flip_player();
-        /// Pętla rozgryki.
-        void play_game();
         /// Zakończ pracę kontrolera, zapisz stan gry jeśli była w trakcie.
         void exit();
-
-        /// Ustaw stan gry na ten z wczytanej gry.
-        void try_load_cached_save();
-        /// Spróbuj wczytać stan gry z pliku o ścieżce podanej w pliku konfiguracyjnym.
-        static std::optional<std::pair<FieldBoard, PlayerEnum>> try_load_saved_state(const Config &config);
-        /// Spróbuj zapisać obecny stan gry do pliku o ścieżce podanej w pliku konfiguracyjnym.
-        bool try_save_state() const;
     };
 
-} // namespace ox
+} // namespace checkers

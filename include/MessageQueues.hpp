@@ -11,12 +11,13 @@
  */
 #pragma once
 
-#include "Field.hpp"
 #include <queue>
 #include <memory>
 #include <condition_variable>
 
-namespace ox
+#include "Game.hpp"
+
+namespace checkers
 {
     /**
      * @brief Struktura reprezentująca wiadomość wysyłaną przez kontroler do widoku.
@@ -24,11 +25,12 @@ namespace ox
      */
     struct GameStateMessage
     {
-        GameStateMessage(GameStateEnum gs, FieldBoard fb)
-            : gameStateEnum(gs), fieldBoard(fb) {}
+        GameStateMessage(GameProgressEnum gp, BoardState bs, std::optional<Coord> sf)
+            : gameProgressEnum(gp), boardState(bs), selectedField(sf) {}
 
-        GameStateEnum gameStateEnum;
-        FieldBoard fieldBoard;
+        GameProgressEnum gameProgressEnum;
+        BoardState boardState;
+        std::optional<Coord> selectedField;
     };
 
     /**
@@ -38,10 +40,7 @@ namespace ox
     enum PlayerInputMessageType
     {
         EXIT,
-        RESET_GAME,
-        INPUT,
-        LOAD_SAVE,
-        NO_LOAD_SAVE
+        SELECT
     };
 
     /**
@@ -53,9 +52,9 @@ namespace ox
     public:
         /// Typ wysyłanej wiadomości
         PlayerInputMessageType messageType;
-        /// Współrzędne pola gdy typem wiadomości jest INPUT.
+        /// Współrzędne pola gdy typem wiadomości jest SELECT.
         int x;
-        /// Współrzędne pola gdy typem wiadomości jest INPUT.
+        /// Współrzędne pola gdy typem wiadomości jest SELECT.
         int y;
 
         PlayerInputMessage(PlayerInputMessageType messageType_, int x_, int y_)
@@ -74,11 +73,11 @@ namespace ox
         /// Wysłanie wiadomości o akcji gracza do kolejki.
         void send_player_input(const PlayerInputMessage input);
         /// Odebranie wiadomości o akcji gracza z kolejki.
-        const PlayerInputMessage wait_for_player_input();
+        PlayerInputMessage wait_for_player_input();
         /// Wysłanie nowego stanu gry do kolejki.
         void send_game_state(const GameStateMessage state);
         /// Wyciągnięcie nowego stanu gry z kolejki stanów gry jeśli nie jest pusta.
-        const std::optional<const GameStateMessage> check_for_game_state();
+        std::optional<const GameStateMessage> check_for_game_state();
 
     private:
         /// Kolejka z wiadomościami o akcjach gracza od widoku do kontrolera.
@@ -92,4 +91,4 @@ namespace ox
         std::queue<GameStateMessage> gameStateQueue;
     };
 
-} // namespace ox
+} // namespace checkers
