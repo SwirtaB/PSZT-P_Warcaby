@@ -13,10 +13,12 @@
 
 #include "Game.hpp"
 #include "Config.hpp"
+#include <boost/array.hpp>
 
 namespace checkers::bot
 {
     const int basicHeuristicTable[] = {1, 2, 1, 2};
+    const int betterHeuristicTable[] = {1, 2, 1, 2, 3, 4, 5, 6};
 
     enum HeuristicEnum
     {
@@ -32,5 +34,6 @@ namespace checkers::bot
      */
     std::pair<Coord, Coord> bot_move(const GameState &, PlayerEnum player, HeuristicEnum heuristicType, int depth);
     int basic_heuristic(const GameState &gameState, PlayerEnum player, Coord coord);
+    int better_heuristic(const GameState &gameState, PlayerEnum player, Coord coord);
     int minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerEnum player);
 } // namespace checkers::bot

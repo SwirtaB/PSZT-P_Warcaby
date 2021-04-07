@@ -127,11 +127,80 @@ int checkers::bot::basic_heuristic(const GameState &gameState, PlayerEnum player
             break;
         case BLACK:
             score = basicHeuristicTable[3]*blackQueens + basicHeuristicTable[2]*blackPawns - (basicHeuristicTable[1]*whiteQueens + basicHeuristicTable[0]*whitePawns);
-            break;
-        default:
-            break; //score = 0
     }
     return score;    
+}
+
+int checkers::bot::better_heuristic(const GameState &gameState, PlayerEnum player, Coord coord) {
+    BoardState board = gameState.get_board_state();
+    int score = 0;
+    int whitePawns = 0, whiteQueens = 0, blackPawns = 0, blackQueens = 0;
+    int myPieceSafe = 0, myPieceNear = 0, hostilePieceSafe = 0, hostilePieceNear = 0;
+    for(int i = 0; i < 8; ++i){
+        for(int j = 0; j < 8; ++j){
+            if(board.fields[i][j].has_value()){
+                switch (board.fields[i][j].value())
+                {
+                    case WHITE_PAWN:
+                        ++whitePawns;
+                        break;
+                    case WHITE_QUEEN:
+                        ++whiteQueens;
+                        break;
+                    case BLACK_PAWN:
+                        ++blackPawns;
+                        break;
+                    case BLACK_QUEEN:
+                        ++blackQueens;
+                        break;
+                }
+                switch (player)
+                {
+                    case WHITE:
+                        if(i == 0 || i == 7){
+                            if (board.fields[i][j].value() == WHITE_PAWN || board.fields[i][j].value() == WHITE_QUEEN)
+                                ++myPieceSafe;
+                            else if (board.fields[i][j].has_value())
+                                ++hostilePieceSafe;
+                        }
+                        else if(j > 4 && i > 0 && i < 7){
+                            if (board.fields[i][j].value() == WHITE_PAWN || board.fields[i][j].value() == WHITE_QUEEN)
+                                ++myPieceNear;
+                            else if (board.fields[i][j].has_value())
+                                ++hostilePieceNear;
+                        }
+                        break;
+                    case BLACK:
+                        if(i == 0 || i == 7){
+                            if (board.fields[i][j].value() == BLACK_PAWN || board.fields[i][j].value() == BLACK_QUEEN)
+                                ++myPieceSafe;
+                            else if (board.fields[i][j].has_value())
+                                ++hostilePieceSafe;
+                        }
+                        else if(j < 3 && i > 0 && i < 7){
+                            if (board.fields[i][j].value() == BLACK_PAWN || board.fields[i][j].value() == BLACK_QUEEN)
+                                ++myPieceNear;
+                            else if (board.fields[i][j].has_value())
+                                ++hostilePieceNear;
+                        }
+                        break;
+                }
+            }
+        }
+    }
+    switch (player)
+    {
+        case WHITE:
+            score = betterHeuristicTable[1]*whiteQueens + betterHeuristicTable[0]*whitePawns + betterHeuristicTable[4]*myPieceSafe
+                    + betterHeuristicTable[6]*myPieceNear - (betterHeuristicTable[3]*blackQueens + betterHeuristicTable[2]*blackPawns
+                    + betterHeuristicTable[5]*hostilePieceSafe + betterHeuristicTable[7]*hostilePieceNear);
+            break;
+        case BLACK:
+            score = betterHeuristicTable[3]*blackQueens + betterHeuristicTable[2]*blackPawns + betterHeuristicTable[5]*myPieceSafe
+                    + betterHeuristicTable[7]*myPieceNear - (betterHeuristicTable[1]*whiteQueens + betterHeuristicTable[0]*whitePawns
+                    + betterHeuristicTable[4]*hostilePieceSafe + betterHeuristicTable[6]*hostilePieceNear);
+    }
+    return score;
 }
 
 /**
@@ -155,7 +224,8 @@ int estimate_move(const GameState &gameState, PlayerEnum player, Coord coord)
         default:
             break;
     }
-    int score = basic_heuristic(gameState, player, coord);
+    //int score = basic_heuristic(gameState, player, coord);
+    int score = better_heuristic(gameState, player, coord);
     // int score = 0;
     // switch(player)
     // {
