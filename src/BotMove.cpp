@@ -95,7 +95,7 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
  * Podsumowując, uciekamy jak tylko się da, chyba że pojawia się okazja zbicia damy przeciwnika
 */ 
 
-int basic_heuristic(const GameState &gameState, PlayerEnum player, Coord coord){
+int checkers::bot::basic_heuristic(const GameState &gameState, PlayerEnum player, Coord coord){
     BoardState board = gameState.get_board_state();
     int score = 0;
     int whitePawns = 0, whiteQueens = 0, blackPawns = 0, blackQueens = 0;

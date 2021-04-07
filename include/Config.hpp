@@ -33,7 +33,7 @@ namespace checkers
          * @brief Czy krzyżykiem steruje bot.
          * 
          */
-        bool white_is_bot = true;
+        bool white_is_bot = false;
         /**
          * @brief Czy kółkiem steruje bot.
          * 
@@ -43,7 +43,7 @@ namespace checkers
          * @brief Głębokość przeszukiwania drzewa gry.
          * 
          */
-        int depth = 1;
+        int depth = 10;
 
         /**
          * @brief Spróbuj wczytać plik konfiguracyjny z argumentów wywołania programu.

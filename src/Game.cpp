@@ -169,8 +169,8 @@ std::vector<Coord> GameState::piece_moves(Coord field) const {
                     vec.push_back(field + Coord(dx, -dy));
                 }
                 if (is_in_board(field.x - dx, field.y - dy)
-                    && can_move_piece(field, field - Coord(-dx, -dy))) {
-                    vec.push_back(field - Coord(-dx, -dy));
+                    && can_move_piece(field, field + Coord(-dx, -dy))) {    //can_move_piece(field, field - Coord(-dx, -dy)))
+                    vec.push_back(field + Coord(-dx, -dy));                     //vec.push_back(field + Coord(-dx, -dy))
                 }
             }
     }

@@ -31,5 +31,6 @@ namespace checkers::bot
      * @return std::pair<int, int> - najlepszy mozliwy ruch
      */
     std::pair<Coord, Coord> bot_move(const GameState &, PlayerEnum player, HeuristicEnum heuristicType, int depth);
+    int basic_heuristic(const GameState &gameState, PlayerEnum player, Coord coord);
     int minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerEnum player);
 } // namespace checkers::bot
