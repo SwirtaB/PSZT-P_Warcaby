@@ -203,8 +203,6 @@ int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameStat
             for(auto move : localState.piece_moves(piece)){
                 if(localState.try_make_move(piece, move))
                     score = minimax(move, depth - 1, alpha, beta, localState, WHITE);
-                else
-                    return bestScore; // jeżeli będzie błąd to wychodzimy zwracając najlepszy znaleziony wynik
                 
                 //alpha-beta pruning (dwie linie)
                 bestScore = std::min(beta, score);
@@ -219,8 +217,6 @@ int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameStat
             for(auto move : localState.piece_moves(piece)){
                 if(localState.try_make_move(piece, move))
                     score = minimax(move, depth - 1, alpha, beta, localState, BLACK);
-                else
-                    return bestScore; // jeżeli będzie błąd to wychodzimy zwracając najlepszy znaleziony wynik
                 
                 //alpha-beta pruning (dwie linie)
                 bestScore = std::max(alpha, score);
