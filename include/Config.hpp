@@ -43,7 +43,7 @@ namespace checkers
          * @brief Głębokość przeszukiwania drzewa gry.
          * 
          */
-        int depth = 10;
+        int depth = 8;
 
         /**
          * @brief Spróbuj wczytać plik konfiguracyjny z argumentów wywołania programu.

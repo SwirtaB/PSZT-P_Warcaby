@@ -197,8 +197,8 @@ int estimate_move(const GameState &gameState, PlayerEnum player, Coord coord)
     }
     int score = 0;
 
-    //score = better_heuristic(gameState, player, coord);
-    score = basic_heuristic(gameState, player, coord);
+    score = better_heuristic(gameState, player, coord);
+    //score = basic_heuristic(gameState, player, coord);
     // int score = 0;
     // switch(player)
     // {
