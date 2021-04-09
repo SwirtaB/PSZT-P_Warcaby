@@ -33,7 +33,7 @@ namespace checkers
          * @brief Czy krzyżykiem steruje bot.
          * 
          */
-        bool white_is_bot = false;
+        bool white_is_bot = true;
         /**
          * @brief Czy kółkiem steruje bot.
          * 

@@ -26,18 +26,18 @@ using namespace checkers::bot;
  */
 std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, PlayerEnum player, HeuristicEnum heuristicType, int depth)
 {
-    GameState localState = gameState;
     std::pair<Coord, Coord> bestMove = std::make_pair(Coord(0,0), Coord(0,0));
     int bestScore = 0, score = 0;
-
+    GameState localState = gameState;
     switch (player)
     {
     case BLACK:
         bestScore = INT_MAX;
-        for(auto piece : localState.pieces_with_moves()) {
-            for (auto move : localState.piece_moves(piece)) {
+        for(auto piece : gameState.pieces_with_moves()) {
+            for (auto move : gameState.piece_moves(piece)) {
                 if (localState.try_make_move(piece, move))
                     score = minimax(move, depth - 1, INT_MIN, INT_MAX, localState, WHITE);
+                localState = gameState;
 
                 if (bestScore > score)
                 {
@@ -50,10 +50,11 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
         break;
     case WHITE:
         bestScore = INT_MIN;
-        for(auto piece : localState.pieces_with_moves()) {
-            for (auto move : localState.piece_moves(piece)) {
+        for(auto piece : gameState.pieces_with_moves()) {
+            for (auto move : gameState.piece_moves(piece)) {
                 if (localState.try_make_move(piece, move))
                     score = minimax(move, depth - 1, INT_MIN, INT_MAX, localState, BLACK);
+                localState = gameState;
 
                 if (bestScore < score)
                 {
@@ -67,6 +68,7 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
     default:
         break;
     }
+    std::cerr << gameState.get_current_player() << ": " << "bestScore= " << bestScore << std::endl;
     return bestMove;
 }
 
@@ -120,22 +122,15 @@ int checkers::bot::basic_heuristic(const GameState &gameState, PlayerEnum player
             } 
         }
     }
-    switch (player)
-    {
-        case WHITE:
-            score = basicHeuristicTable[1]*whiteQueens + basicHeuristicTable[0]*whitePawns - (basicHeuristicTable[3]*blackQueens + basicHeuristicTable[2]*blackPawns);
-            break;
-        case BLACK:
-            score = basicHeuristicTable[3]*blackQueens + basicHeuristicTable[2]*blackPawns - (basicHeuristicTable[1]*whiteQueens + basicHeuristicTable[0]*whitePawns);
-    }
-    return score;    
+    score = basicHeuristicTable[1]*whiteQueens + basicHeuristicTable[0]*whitePawns - (basicHeuristicTable[3]*blackQueens + basicHeuristicTable[2]*blackPawns);
+    return score;
 }
 
 int checkers::bot::better_heuristic(const GameState &gameState, PlayerEnum player, Coord coord) {
     BoardState board = gameState.get_board_state();
     int score = 0;
     int whitePawns = 0, whiteQueens = 0, blackPawns = 0, blackQueens = 0;
-    int myPieceSafe = 0, myPieceNear = 0, hostilePieceSafe = 0, hostilePieceNear = 0;
+    int whitePieceSafe = 0, whitePieceNear = 0, blackPieceSafe = 0, blackPieceNear = 0;
     for(int i = 0; i < 8; ++i){
         for(int j = 0; j < 8; ++j){
             if(board.fields[i][j].has_value()){
@@ -143,63 +138,39 @@ int checkers::bot::better_heuristic(const GameState &gameState, PlayerEnum playe
                 {
                     case WHITE_PAWN:
                         ++whitePawns;
+                        if(i == 0 || i == 7)
+                            ++whitePieceSafe;
+                        else if(j > 4 && i > 0 && i < 7)
+                            ++whitePieceNear;
                         break;
                     case WHITE_QUEEN:
                         ++whiteQueens;
+                        if(i == 0 || i == 7)
+                            ++whitePieceSafe;
+                        else if(j > 4 && i > 0 && i < 7)
+                            ++whitePieceNear;
                         break;
                     case BLACK_PAWN:
                         ++blackPawns;
+                        if(i == 0 || i == 7)
+                            ++blackPieceSafe;
+                        else if(j < 3 && i > 0 && i < 7)
+                            ++blackPieceNear;
                         break;
                     case BLACK_QUEEN:
                         ++blackQueens;
-                        break;
-                }
-                switch (player)
-                {
-                    case WHITE:
-                        if(i == 0 || i == 7){
-                            if (board.fields[i][j].value() == WHITE_PAWN || board.fields[i][j].value() == WHITE_QUEEN)
-                                ++myPieceSafe;
-                            else if (board.fields[i][j].has_value())
-                                ++hostilePieceSafe;
-                        }
-                        else if(j > 4 && i > 0 && i < 7){
-                            if (board.fields[i][j].value() == WHITE_PAWN || board.fields[i][j].value() == WHITE_QUEEN)
-                                ++myPieceNear;
-                            else if (board.fields[i][j].has_value())
-                                ++hostilePieceNear;
-                        }
-                        break;
-                    case BLACK:
-                        if(i == 0 || i == 7){
-                            if (board.fields[i][j].value() == BLACK_PAWN || board.fields[i][j].value() == BLACK_QUEEN)
-                                ++myPieceSafe;
-                            else if (board.fields[i][j].has_value())
-                                ++hostilePieceSafe;
-                        }
-                        else if(j < 3 && i > 0 && i < 7){
-                            if (board.fields[i][j].value() == BLACK_PAWN || board.fields[i][j].value() == BLACK_QUEEN)
-                                ++myPieceNear;
-                            else if (board.fields[i][j].has_value())
-                                ++hostilePieceNear;
-                        }
+                        if(i == 0 || i == 7)
+                            ++blackPieceSafe;
+                        else if(j < 3 && i > 0 && i < 7)
+                            ++blackPieceNear;
                         break;
                 }
             }
         }
     }
-    switch (player)
-    {
-        case WHITE:
-            score = betterHeuristicTable[1]*whiteQueens + betterHeuristicTable[0]*whitePawns + betterHeuristicTable[4]*myPieceSafe
-                    + betterHeuristicTable[6]*myPieceNear - (betterHeuristicTable[3]*blackQueens + betterHeuristicTable[2]*blackPawns
-                    + betterHeuristicTable[5]*hostilePieceSafe + betterHeuristicTable[7]*hostilePieceNear);
-            break;
-        case BLACK:
-            score = betterHeuristicTable[3]*blackQueens + betterHeuristicTable[2]*blackPawns + betterHeuristicTable[5]*myPieceSafe
-                    + betterHeuristicTable[7]*myPieceNear - (betterHeuristicTable[1]*whiteQueens + betterHeuristicTable[0]*whitePawns
-                    + betterHeuristicTable[4]*hostilePieceSafe + betterHeuristicTable[6]*hostilePieceNear);
-    }
+    score = betterHeuristicTable[1]*whiteQueens + betterHeuristicTable[0]*whitePawns + betterHeuristicTable[4]*whitePieceSafe
+            + betterHeuristicTable[6]*whitePieceNear - (betterHeuristicTable[3]*blackQueens + betterHeuristicTable[2]*blackPawns
+            + betterHeuristicTable[5]*blackPieceSafe + betterHeuristicTable[7]*blackPieceNear);
     return score;
 }
 
@@ -224,8 +195,10 @@ int estimate_move(const GameState &gameState, PlayerEnum player, Coord coord)
         default:
             break;
     }
-    //int score = basic_heuristic(gameState, player, coord);
-    int score = better_heuristic(gameState, player, coord);
+    int score = 0;
+
+    //score = better_heuristic(gameState, player, coord);
+    score = basic_heuristic(gameState, player, coord);
     // int score = 0;
     // switch(player)
     // {
@@ -257,25 +230,27 @@ int estimate_move(const GameState &gameState, PlayerEnum player, Coord coord)
 * @param player - gracz wykonujacy ruch
 * @return int - jakosc danej planszy
 */
-int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameState game, PlayerEnum player)
+int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameState gameState, PlayerEnum player)
 {
-    GameState localState = game;
-    if (!depth || localState.get_game_progress() != PLAYING)
+    if (!depth || gameState.get_game_progress() != PLAYING)
     {
-        return estimate_move(localState, player, coord);
+        return estimate_move(gameState, player, coord);
     }
     int bestScore = 0, score = 0;
+    GameState localState = gameState;
     switch (player)
     {
     case BLACK:
         bestScore = INT_MAX;
-        for(auto piece : localState.pieces_with_moves()){
-            for(auto move : localState.piece_moves(piece)){
+        for(auto piece : gameState.pieces_with_moves()){
+            for(auto move : gameState.piece_moves(piece)){
                 if(localState.try_make_move(piece, move))
                     score = minimax(move, depth - 1, alpha, beta, localState, WHITE);
-                
+                localState = gameState;
+
+                bestScore = std::min(bestScore, score);
                 //alpha-beta pruning (dwie linie)
-                bestScore = std::min(beta, score);
+                beta = std::min(beta, score);
                 if(beta <= alpha)
                     return bestScore;
             }
@@ -283,13 +258,15 @@ int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameStat
         break;
     case WHITE:
         bestScore = INT_MIN;
-        for(auto piece : localState.pieces_with_moves()){
-            for(auto move : localState.piece_moves(piece)){
+        for(auto piece : gameState.pieces_with_moves()){
+            for(auto move : gameState.piece_moves(piece)){
                 if(localState.try_make_move(piece, move))
                     score = minimax(move, depth - 1, alpha, beta, localState, BLACK);
-                
+                localState = gameState;
+
+                bestScore = std::max(bestScore, score);
                 //alpha-beta pruning (dwie linie)
-                bestScore = std::max(alpha, score);
+                alpha = std::max(alpha, score);
                 if(beta <= alpha)
                     return bestScore;
             }
