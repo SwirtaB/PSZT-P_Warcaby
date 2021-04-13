@@ -196,24 +196,9 @@ int estimate_move(const GameState &gameState, PlayerEnum player, Coord coord)
             break;
     }
     int score = 0;
-
     score = better_heuristic(gameState, player, coord);
     //score = basic_heuristic(gameState, player, coord);
-    // int score = 0;
-    // switch(player)
-    // {
-    //     case WHITE:
-    //         //funkcja heurystyczna
-    //         score = 0;
-    //         break;
-    //     case BLACK:
-    //         //funkcja heurystyczna
-    //         score = 0;
-    //         break;
-    //     default:
-    //         score = 0;
-    //         break;
-    // }
+
     return score;
 }
 
@@ -271,23 +256,6 @@ int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameStat
                     return bestScore;
             }
         }
-        // for (int y = 0; y < 3; ++y)
-        // {
-        //     for (int x = 0; x < 3; ++x)
-        //     {
-        //         if (gameField.get_field_state(x, y) == EMPTY)
-        //         {
-        //             gameField.cross_field(x, y);
-        //             score = minimax(x, y, depth - 1, alpha, beta, gameField, CIRCLE_PLAYER);
-        //             gameField.empty_field(x, y);
-        //             bestScore = std::max(score, bestScore);
-        //             //alpha-beta pruning (dwie linie)
-        //             alpha = std::max(alpha, score);
-        //             if (beta <= alpha)
-        //                 return bestScore;
-        //         }
-        //     }
-        // }
         break;
     default:
         break;

@@ -20,12 +20,6 @@ namespace checkers::bot
     const int basicHeuristicTable[] = {1, 2, 1, 2};
     const int betterHeuristicTable[] = {1, 2, 1, 2, 3, 4, 5, 6};
 
-    enum HeuristicEnum
-    {
-        BASIC,
-        BETTER
-    };
-
     /**
      * @brief Zwraca ruch wykonywany przez bota za pomocą podanej taktyki.
      *

@@ -27,6 +27,10 @@ namespace checkers
      *          Możliwe konfiguracje widoczne w pliku config.py w głównym folderze projektu.
      * 
      */
+     enum HeuristicEnum{
+         BASIC,
+         BETTER
+     };
     struct Config
     {
         /**
