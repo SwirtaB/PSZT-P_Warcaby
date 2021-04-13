@@ -3,7 +3,7 @@
  * @author Bartosz Świrta
  * @brief Zawiera definicje metody bot_move, estimate_move - heurystyka ewaluujaca ruch, minimax - implementuje algorytm minimax
  * @version 1.0
- * @date 2021-01-10
+ * @date 2021-04-13
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -36,7 +36,7 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
         for(auto piece : gameState.pieces_with_moves()) {
             for (auto move : gameState.piece_moves(piece)) {
                 if (localState.try_make_move(piece, move))
-                    score = minimax(move, depth - 1, INT_MIN, INT_MAX, localState, WHITE);
+                    score = minimax(localState, depth - 1, INT_MIN, INT_MAX, WHITE, heuristicType);
                 localState = gameState;
 
                 if (bestScore > score)
@@ -53,7 +53,7 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
         for(auto piece : gameState.pieces_with_moves()) {
             for (auto move : gameState.piece_moves(piece)) {
                 if (localState.try_make_move(piece, move))
-                    score = minimax(move, depth - 1, INT_MIN, INT_MAX, localState, BLACK);
+                    score = minimax(localState, depth - 1, INT_MIN, INT_MAX, BLACK, heuristicType);
                 localState = gameState;
 
                 if (bestScore < score)
@@ -97,7 +97,8 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
  * Podsumowując, uciekamy jak tylko się da, chyba że pojawia się okazja zbicia damy przeciwnika
 */ 
 
-int checkers::bot::basic_heuristic(const GameState &gameState, PlayerEnum player, Coord coord){
+
+int checkers::bot::basic_heuristic(const GameState &gameState){
     BoardState board = gameState.get_board_state();
     int score = 0;
     int whitePawns = 0, whiteQueens = 0, blackPawns = 0, blackQueens = 0;
@@ -119,14 +120,44 @@ int checkers::bot::basic_heuristic(const GameState &gameState, PlayerEnum player
                         ++blackQueens;
                         break;
                 }
-            } 
+            }
         }
     }
     score = basicHeuristicTable[1]*whiteQueens + basicHeuristicTable[0]*whitePawns - (basicHeuristicTable[3]*blackQueens + basicHeuristicTable[2]*blackPawns);
+
     return score;
 }
 
-int checkers::bot::better_heuristic(const GameState &gameState, PlayerEnum player, Coord coord) {
+int checkers::bot::aggressive_basic_heuristic(const GameState &gameState) {
+    BoardState board = gameState.get_board_state();
+    int score = 0;
+    int whitePawnsValue = 0, whiteQueensValue = 0, blackPawnsValue = 0, blackQueensValue = 0;
+    for(int i = 0; i < 8; ++i){
+        for(int j = 0; j < 8; ++j){
+            if(board.fields[i][j].has_value()){
+                switch (board.fields[i][j].value())
+                {
+                    case WHITE_PAWN:
+                        whitePawnsValue += basicHeuristicTable[0] + j;
+                        break;
+                    case WHITE_QUEEN:
+                        whiteQueensValue += basicHeuristicTable[1] + 8;
+                        break;
+                    case BLACK_PAWN:
+                        blackPawnsValue += basicHeuristicTable[2] + j;
+                        break;
+                    case BLACK_QUEEN:
+                        blackQueensValue += basicHeuristicTable[3] + 8;
+                        break;
+                }
+            }
+        }
+    }
+    score = whiteQueensValue + whitePawnsValue - (blackQueensValue + blackPawnsValue);
+    return score;
+}
+
+int checkers::bot::better_heuristic(const GameState &gameState) {
     BoardState board = gameState.get_board_state();
     int score = 0;
     int whitePawns = 0, whiteQueens = 0, blackPawns = 0, blackQueens = 0;
@@ -171,34 +202,34 @@ int checkers::bot::better_heuristic(const GameState &gameState, PlayerEnum playe
     score = betterHeuristicTable[1]*whiteQueens + betterHeuristicTable[0]*whitePawns + betterHeuristicTable[4]*whitePieceSafe
             + betterHeuristicTable[6]*whitePieceNear - (betterHeuristicTable[3]*blackQueens + betterHeuristicTable[2]*blackPawns
             + betterHeuristicTable[5]*blackPieceSafe + betterHeuristicTable[7]*blackPieceNear);
+
     return score;
 }
 
-/**
- * @brief 
- * 
- * @param game - obecnie rozpatrywana plansza
- * @param player - który gracz wykonuj ruch
- * @param coord - struktura z współrzędnymi rozpatrywanego ruchu
- * @return int - jakosc danej planszy (w konsekwencji rowniez rozpatrywanego ruchu)
- */
-int estimate_move(const GameState &gameState, PlayerEnum player, Coord coord)
+int checkers::bot::estimate_move(const GameState &gameState, HeuristicEnum heuristicType)
 {
     switch(gameState.get_game_progress())
     {
         case WHITE_WON:
-            return 100;
+            return 1000;
         case BLACK_WON:
-            return -100;
+            return -1000;
         case TIE:
             return 0;
         default:
             break;
     }
     int score = 0;
-    score = better_heuristic(gameState, player, coord);
-    //score = basic_heuristic(gameState, player, coord);
-
+    switch (heuristicType) {
+        case checkers::BASIC:
+            score = basic_heuristic(gameState);
+            break;
+        case checkers::A_BASIC:
+            score = aggressive_basic_heuristic(gameState);
+            break;
+        case checkers::BETTER:
+            score = better_heuristic(gameState);
+    }
     return score;
 }
 
@@ -215,11 +246,11 @@ int estimate_move(const GameState &gameState, PlayerEnum player, Coord coord)
 * @param player - gracz wykonujacy ruch
 * @return int - jakosc danej planszy
 */
-int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameState gameState, PlayerEnum player)
+int checkers::bot::minimax(const GameState &gameState, int depth, int alpha, int beta, PlayerEnum player, HeuristicEnum heuristicType)
 {
     if (!depth || gameState.get_game_progress() != PLAYING)
     {
-        return estimate_move(gameState, player, coord);
+        return estimate_move(gameState, heuristicType);
     }
     int bestScore = 0, score = 0;
     GameState localState = gameState;
@@ -230,7 +261,7 @@ int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameStat
         for(auto piece : gameState.pieces_with_moves()){
             for(auto move : gameState.piece_moves(piece)){
                 if(localState.try_make_move(piece, move))
-                    score = minimax(move, depth - 1, alpha, beta, localState, WHITE);
+                    score = minimax(localState, depth - 1, alpha, beta, WHITE, heuristicType);
                 localState = gameState;
 
                 bestScore = std::min(bestScore, score);
@@ -246,7 +277,7 @@ int checkers::bot::minimax(Coord coord, int depth, int alpha, int beta, GameStat
         for(auto piece : gameState.pieces_with_moves()){
             for(auto move : gameState.piece_moves(piece)){
                 if(localState.try_make_move(piece, move))
-                    score = minimax(move, depth - 1, alpha, beta, localState, BLACK);
+                    score = minimax(localState, depth - 1, alpha, beta, BLACK, heuristicType);
                 localState = gameState;
 
                 bestScore = std::max(bestScore, score);

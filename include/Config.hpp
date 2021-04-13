@@ -29,29 +29,33 @@ namespace checkers
      */
      enum HeuristicEnum{
          BASIC,
+         A_BASIC,
          BETTER
      };
     struct Config
     {
         /**
-         * @brief Czy krzyżykiem steruje bot.
-         * 
+         * @brief Czy białymi steruje bot.
          */
         bool white_is_bot = true;
         /**
-         * @brief Czy kółkiem steruje bot.
-         * 
+         * @brief Heurystyka, którą posługuje się biały bot.
+         */
+        HeuristicEnum whiteBotHeuristic = BASIC;
+        /**
+         * @brief Czy czarnymi steruje bot.
          */
         bool black_is_bot = true;
         /**
-         * @brief Głębokość przeszukiwania drzewa gry.
-         * 
+         * @brief Heurystyka, którą posługuje się czzarny bot.
          */
-        int depth = 8;
-
+        HeuristicEnum blackBotHeuristic = BETTER;
+        /**
+         * @brief Głębokość przeszukiwania drzewa gry.
+         */
+        int depth = 2;
         /**
          * @brief Spróbuj wczytać plik konfiguracyjny z argumentów wywołania programu.
-         * 
          */
         static std::optional<Config> try_from_args(int argc, char *argv[]);
     };

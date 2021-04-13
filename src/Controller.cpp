@@ -67,7 +67,15 @@ void Controller::run()
         }
         else
         {
-             std::pair<Coord, Coord> move = bot::bot_move(gameState, gameState.get_current_player(), checkers::BASIC, config.depth);
+            std::pair<Coord, Coord> move = std::make_pair(Coord(0,0), Coord(0,0));
+            switch(gameState.get_current_player()) {
+                case WHITE:
+                    move = bot::bot_move(gameState, WHITE, config.whiteBotHeuristic, config.depth);
+                    break;
+                case BLACK:
+                    move = bot::bot_move(gameState, BLACK, config.blackBotHeuristic, config.depth);
+                    break;
+            }
              std::this_thread::sleep_for(std::chrono::milliseconds(250));
              if (!gameState.try_make_move(move.first, move.second)) {
                  std::cerr << "Bot tried to make illegal move!" << " "  << gameState.get_current_player() << "x: " << move.second.x << "y: " << move.second.y << std::endl;

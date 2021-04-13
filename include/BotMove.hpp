@@ -17,17 +17,53 @@
 
 namespace checkers::bot
 {
-    const int basicHeuristicTable[] = {1, 2, 1, 2};
-    const int betterHeuristicTable[] = {1, 2, 1, 2, 3, 4, 5, 6};
+    const int basicHeuristicTable[] = {4, 8, 4, 8};
+    const int betterHeuristicTable[] = {4, 8, 4, 8, 5, 8, 6, 10};
 
     /**
      * @brief Zwraca ruch wykonywany przez bota za pomocą podanej taktyki.
-     *
-     * @param depth - glebokosc przeszukiwania
-     * @return std::pair<int, int> - najlepszy mozliwy ruch
+     * 
+     * @param player - gracz dla którego będzie budowane drzewo
+     * @param heuristicType - enumerator używanej heurystyki
+     * @param depth - głębokość budowania drzewa gry
+     * @return std::pair<Coord, Coord> - współrzędne najlepszego ruchu (skąd dokąd)
      */
     std::pair<Coord, Coord> bot_move(const GameState &, PlayerEnum player, HeuristicEnum heuristicType, int depth);
-    int basic_heuristic(const GameState &gameState, PlayerEnum player, Coord coord);
-    int better_heuristic(const GameState &gameState, PlayerEnum player, Coord coord);
-    int minimax(Coord coord, int depth, int alpha, int beta, GameState gameState, PlayerEnum player);
+    /**
+     * @brief 
+     * 
+     * @param gameState
+     * @return int - wynik ewaluacji
+     */
+    int basic_heuristic(const GameState &gameState);
+    /**
+     *
+     * @param gameState
+     * @return
+     */
+    int aggressive_basic_heuristic(const GameState &gameState);
+    /**
+     *
+     * @param gameState
+     * @return
+     */
+    int better_heuristic(const GameState &gameState);
+    /**
+     *
+     * @param gameState
+     * @param heuristicType
+     * @return
+     */
+    int estimate_move(const GameState &gameState, HeuristicEnum heuristicType);
+    /**
+     *
+     * @param gameState
+     * @param depth
+     * @param alpha
+     * @param beta
+     * @param player
+     * @param heuristicType
+     * @return
+     */
+    int minimax(const GameState &gameState, int depth, int alpha, int beta, PlayerEnum player, HeuristicEnum heuristicType);
 } // namespace checkers::bot
