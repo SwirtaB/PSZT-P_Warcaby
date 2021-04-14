@@ -29,26 +29,7 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
     std::pair<Coord, Coord> bestMove = std::make_pair(Coord(0,0), Coord(0,0));
     int bestScore = 0, score = 0;
     GameState localState = gameState;
-    switch (player)
-    {
-    case BLACK:
-        bestScore = INT_MAX;
-        for(auto piece : gameState.pieces_with_moves()) {
-            for (auto move : gameState.piece_moves(piece)) {
-                if (localState.try_make_move(piece, move))
-                    score = minimax(localState, depth - 1, INT_MIN, INT_MAX, WHITE, heuristicType);
-                localState = gameState;
-
-                if (bestScore > score)
-                {
-                    bestScore = score;
-                    bestMove.first = piece;
-                    bestMove.second = move;
-                }
-            }
-        }
-        break;
-    case WHITE:
+    if(player == WHITE){
         bestScore = INT_MIN;
         for(auto piece : gameState.pieces_with_moves()) {
             for (auto move : gameState.piece_moves(piece)) {
@@ -64,9 +45,23 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
                 }
             }
         }
-        break;
-    default:
-        break;
+    }
+    else{
+        bestScore = INT_MAX;
+        for(auto piece : gameState.pieces_with_moves()) {
+            for (auto move : gameState.piece_moves(piece)) {
+                if (localState.try_make_move(piece, move))
+                    score = minimax(localState, depth - 1, INT_MIN, INT_MAX, WHITE, heuristicType);
+                localState = gameState;
+
+                if (bestScore > score)
+                {
+                    bestScore = score;
+                    bestMove.first = piece;
+                    bestMove.second = move;
+                }
+            }
+        }
     }
     std::cerr << gameState.get_current_player() << ": " << "bestScore= " << bestScore << std::endl;
     return bestMove;
@@ -219,7 +214,7 @@ int checkers::bot::estimate_move(const GameState &gameState, HeuristicEnum heuri
         default:
             break;
     }
-    int score = 0;
+    int score;
     switch (heuristicType) {
         case checkers::BASIC:
             score = basic_heuristic(gameState);
@@ -229,6 +224,7 @@ int checkers::bot::estimate_move(const GameState &gameState, HeuristicEnum heuri
             break;
         case checkers::BETTER:
             score = better_heuristic(gameState);
+            break;
     }
     return score;
 }
@@ -252,44 +248,36 @@ int checkers::bot::minimax(const GameState &gameState, int depth, int alpha, int
     {
         return estimate_move(gameState, heuristicType);
     }
-    int bestScore = 0, score = 0;
+    int score = 0;
     GameState localState = gameState;
-    switch (player)
-    {
-    case BLACK:
-        bestScore = INT_MAX;
-        for(auto piece : gameState.pieces_with_moves()){
-            for(auto move : gameState.piece_moves(piece)){
-                if(localState.try_make_move(piece, move))
-                    score = minimax(localState, depth - 1, alpha, beta, WHITE, heuristicType);
-                localState = gameState;
-
-                bestScore = std::min(bestScore, score);
-                //alpha-beta pruning (dwie linie)
-                beta = std::min(beta, score);
-                if(beta <= alpha)
-                    return bestScore;
-            }
-        }
-        break;
-    case WHITE:
-        bestScore = INT_MIN;
+    if(player == WHITE){
         for(auto piece : gameState.pieces_with_moves()){
             for(auto move : gameState.piece_moves(piece)){
                 if(localState.try_make_move(piece, move))
                     score = minimax(localState, depth - 1, alpha, beta, BLACK, heuristicType);
                 localState = gameState;
 
-                bestScore = std::max(bestScore, score);
                 //alpha-beta pruning (dwie linie)
                 alpha = std::max(alpha, score);
                 if(beta <= alpha)
-                    return bestScore;
+                    return beta;
             }
         }
-        break;
-    default:
-        break;
+        return alpha;
     }
-    return bestScore;
+    else{
+        for(auto piece : gameState.pieces_with_moves()){
+            for(auto move : gameState.piece_moves(piece)){
+                if(localState.try_make_move(piece, move))
+                    score = minimax(localState, depth - 1, alpha, beta, WHITE, heuristicType);
+                localState = gameState;
+
+                //alpha-beta pruning (dwie linie)
+                beta = std::min(beta, score);
+                if(beta <= alpha)
+                    return alpha;
+            }
+        }
+        return beta;
+    }
 }

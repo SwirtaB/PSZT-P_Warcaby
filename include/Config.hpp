@@ -41,7 +41,7 @@ namespace checkers
         /**
          * @brief Heurystyka, którą posługuje się biały bot.
          */
-        HeuristicEnum whiteBotHeuristic = BASIC;
+        HeuristicEnum whiteBotHeuristic = A_BASIC;
         /**
          * @brief Czy czarnymi steruje bot.
          */
@@ -53,7 +53,7 @@ namespace checkers
         /**
          * @brief Głębokość przeszukiwania drzewa gry.
          */
-        int depth = 2;
+        int depth = 4;
         /**
          * @brief Spróbuj wczytać plik konfiguracyjny z argumentów wywołania programu.
          */
