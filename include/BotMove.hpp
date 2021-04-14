@@ -22,7 +22,6 @@ namespace checkers::bot
 
     /**
      * @brief Zwraca ruch wykonywany przez bota za pomocą podanej taktyki.
-     * 
      * @param player - gracz dla którego będzie budowane drzewo
      * @param heuristicType - enumerator używanej heurystyki
      * @param depth - głębokość budowania drzewa gry
@@ -30,40 +29,39 @@ namespace checkers::bot
      */
     std::pair<Coord, Coord> bot_move(const GameState &, PlayerEnum player, HeuristicEnum heuristicType, int depth);
     /**
-     * @brief 
-     * 
-     * @param gameState
+     * @brief Heurystyka bierze pod uwagę ilość własnych bierek i bierek przeciwnika z wagami.
+     * @param gameState - rozpatrywany stan gry
      * @return int - wynik ewaluacji
      */
     int basic_heuristic(const GameState &gameState);
     /**
-     *
-     * @param gameState
-     * @return
+     * @brief Modyfikacja basic_heuristic, która premiuje przesuwanie pionów na połowę przeciwnika.
+     * @param gameState - rozpatrywany stan gry
+     * @return - jakość danego satnu
      */
     int aggressive_basic_heuristic(const GameState &gameState);
     /**
-     *
-     * @param gameState
-     * @return
+     * @brief Heurystyka bierze pod uwagę ilość własnych bierek i bierek przeciwnika z wagami. Dodatkowo premiuje pola bezpieczne i te blisko przemiany.
+     * @param gameState - rozpatrywany stan gry
+     * @return - jakość danego stanu
      */
     int better_heuristic(const GameState &gameState);
     /**
-     *
-     * @param gameState
-     * @param heuristicType
-     * @return
+     * @brief Weryfikuje czy doszło do zakończenia rozgrywki (kto wygrał, bądź remis). Jeżeli nie to wywołuje stosowną funkcję heurystyczną.
+     * @param gameState - rozpatrywany stan gry
+     * @param heuristicType - typ heurystyki używanej przez bota
+     * @return - jakość danego stanu
      */
     int estimate_move(const GameState &gameState, HeuristicEnum heuristicType);
     /**
-     *
-     * @param gameState
-     * @param depth
-     * @param alpha
-     * @param beta
-     * @param player
-     * @param heuristicType
-     * @return
+     * @brief Implementuje algorytm minimax z przycinaniem alpha-beta
+     * @param gameState - rozpatrywany stan gry
+     * @param depth - głębokość przeszukiwania
+     * @param alpha - wartość zmiennej alfa (alpha-beta pruning)
+     * @param beta - wartość zmiennej beta (alpha-beta pruning)
+     * @param player - gracz wykonujący ruch
+     * @param heuristicType - typ heurystyki jaką posługuje się bot
+     * @return - jakość danego stanu
      */
     int minimax(const GameState &gameState, int depth, int alpha, int beta, PlayerEnum player, HeuristicEnum heuristicType);
 } // namespace checkers::bot

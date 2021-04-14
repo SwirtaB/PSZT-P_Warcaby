@@ -15,15 +15,6 @@
 using namespace checkers;
 using namespace checkers::bot;
 
-/**
- * @brief Implemetuje obsluge ruchu bot'a. Wywoluje odpowiednie funkcje w zaleznosci od wartosci wczytanych z pliku konfiguracyjnego.
- *
- * @param fieldBoard - rozpatrywana plansza
- * @param player - ktory gracz ma wykonac ruch
- * @param tactic - taktyka uzywana przez bot'a
- * @param depth - glebokosc przegladania
- * @return std::pair<int, int> - najlepszy mozliwy ruch
- */
 std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, PlayerEnum player, HeuristicEnum heuristicType, int depth)
 {
     std::pair<Coord, Coord> bestMove = std::make_pair(Coord(0,0), Coord(0,0));
@@ -229,19 +220,6 @@ int checkers::bot::estimate_move(const GameState &gameState, HeuristicEnum heuri
     return score;
 }
 
-
-
-/**
-* @brief Implementuje algorytm minimax z przycinaniem alpha-beta
-*
-* @param coord - koordynaty rozpatrywanej figury
-* @param depth - gleboksc przegladania
-* @param alpha - wartosc zmiennej alpha (alpha-beta pruning)
-* @param beta - wartosc zmiennej beta (alpha-beta pruning)
-* @param gameField - obecnie rozpatrywana plansza
-* @param player - gracz wykonujacy ruch
-* @return int - jakosc danej planszy
-*/
 int checkers::bot::minimax(const GameState &gameState, int depth, int alpha, int beta, PlayerEnum player, HeuristicEnum heuristicType)
 {
     if (!depth || gameState.get_game_progress() != PLAYING)
