@@ -54,7 +54,6 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
             }
         }
     }
-    std::cerr << gameState.get_current_player() << ": " << "bestScore= " << bestScore << std::endl;
     return bestMove;
 }
 
