@@ -58,32 +58,6 @@ std::pair<Coord, Coord> checkers::bot::bot_move(const GameState &gameState, Play
     return bestMove;
 }
 
-/* Biały MAKSYMALIZUJE wynik, czarny MINIMALIZUJE wynik
- * int basicHeuristicTable = {  waga mojego piona,      - mm
-                                waga mojej damy,        - mk 
-                                waga piona przeciwnika, - hm
-                                waga damy przeciwnika   - hk}
- * function - H = mk*<ilość moich damek> + mm*<ilość moich pionów> - (hk*<ilość wrogich damek> + hm*<ilość wrogich pionów>)
- * 
- * int betterHeuristicTable = { waga mojego piona,                                      - mm  
- *                              waga mojej damy,                                        - mk
- *                              waga pól brzegowych (zajętych przez moje bierki),       - msf
- *                              waga pól brzegowych (zajętych przez wrogie bierki),     - hsf
- *                              waga pól bliskich polom promocji (dla moich pionów),    - mpf
- *                              waga pól bliskich polom promocji (dla wrogich pionów)   - hpf}
- * 
- * function - H = mk*<ilość moich damek> + mm*<ilość moich pionów> + msf*<ilość moich bierek na bezpiecznych polach> + mpf*<ilość moich bierek na polach bliskich polom promocji>
- *              - (hk*<ilość wrogich damek> + hm*<ilość wrogich pionów> + hsf*<ilość wrogich bierek na bezpiecznych polach> + hpf*<ilość wrogich bierek na polach bliskich polom promocji>)
- * 
- * Możliwe jest dodanie heurystyki końcowej. W momencie gdy na planszy są już tylko damki stosujemy inną heurystykę.
- * Przykład suma odległości:
- *  Dla każdej damki liczymy sumę odległości od wrogich damek -> Preferujemy ucieczkę
- *  Dodatkwo możliwość zbicia wrogiej damki jest bardzo wysoko punktowana.
- * 
- * Podsumowując, uciekamy jak tylko się da, chyba że pojawia się okazja zbicia damy przeciwnika
-*/ 
-
-
 int checkers::bot::basic_heuristic(const GameState &gameState){
     BoardState board = gameState.get_board_state();
     int score = 0;
@@ -185,9 +159,9 @@ int checkers::bot::better_heuristic(const GameState &gameState) {
             }
         }
     }
-    score = betterHeuristicTable[1]*whiteQueens + betterHeuristicTable[0]*whitePawns + betterHeuristicTable[4]*whitePieceSafe
-            + betterHeuristicTable[6]*whitePieceNear - (betterHeuristicTable[3]*blackQueens + betterHeuristicTable[2]*blackPawns
-            + betterHeuristicTable[5]*blackPieceSafe + betterHeuristicTable[7]*blackPieceNear);
+    score = boardAwareHeuristicTable[1]*whiteQueens + boardAwareHeuristicTable[0]*whitePawns + boardAwareHeuristicTable[4]*whitePieceSafe
+            + boardAwareHeuristicTable[6]*whitePieceNear - (boardAwareHeuristicTable[3]*blackQueens + boardAwareHeuristicTable[2]*blackPawns
+            + boardAwareHeuristicTable[5]*blackPieceSafe + boardAwareHeuristicTable[7]*blackPieceNear);
 
     return score;
 }

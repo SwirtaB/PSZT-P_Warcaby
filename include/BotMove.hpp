@@ -1,9 +1,9 @@
 /**
  * @file BotMove.hpp
  * @author Bartosz Świrta
- * @brief Zawiera deklaracje metody bot_move - ruch bota
+ * @brief Tablice wag heurystyk, deklaracje funkcji implementujących bota.
  * @version 1.0
- * @date 2021-01-10
+ * @date 2021-04-06
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -13,12 +13,11 @@
 
 #include "Game.hpp"
 #include "Config.hpp"
-#include <boost/array.hpp>
 
 namespace checkers::bot
 {
     const int basicHeuristicTable[] = {4, 8, 4, 8};
-    const int betterHeuristicTable[] = {4, 8, 4, 8, 5, 8, 6, 10};
+    const int boardAwareHeuristicTable[] = {4, 8, 4, 8, 5, 6, 7, 8};
 
     /**
      * @brief Zwraca ruch wykonywany przez bota za pomocą podanej taktyki.
