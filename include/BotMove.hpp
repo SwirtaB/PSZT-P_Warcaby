@@ -16,7 +16,9 @@
 
 namespace checkers::bot
 {
+    ///Tablica wag dla heurystyk BASIC i A_BASIC
     const int basicHeuristicTable[] = {4, 8, 4, 8};
+    ///Tablica wag dla heurystyki BOARD_AWARE
     const int boardAwareHeuristicTable[] = {4, 8, 4, 8, 5, 6, 7, 8};
 
     /**
