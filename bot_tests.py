@@ -22,13 +22,12 @@ def run_games():
     
     base_params = " --wbot true --bbot true --gui false --log ./match_results/"
     
-    games = [
-        { "name": "default.txt", "params": "" },
-    ]
+    games = get_test_games()
     
     for game in games:
         command = executable + base_params + game["name"] + " " + game["params"]
         os.system(command)
+        print("played game " + game["name"])
         process_log("./match_results/" + game["name"], "results/" + game["name"])
 
     
@@ -37,6 +36,13 @@ def run_games():
     else:
         os.system("rm -rf match_results")
 
+def get_test_games():
+    games = []
+    for i in range(1, 5):
+        games.append({"name": "basic-%d-vs-a_basic-%d.txt"%(i,i), "params": "--wheuristic basic --wdepth %d --bheuristic a_basic --bdepth %d"%(i,i) })
+        games.append({"name": "a_basic-%d-vs-basic-%d.txt"%(i,i), "params": "--wheuristic a_basic --wdepth %d --bheuristic basic --bdepth %d"%(i,i) })
+
+    return games
 
 def process_log(in_path, out_path):
     inf = open(in_path, "r")
