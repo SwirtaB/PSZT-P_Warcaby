@@ -1,9 +1,9 @@
 /**
  * @file Game.cpp
- * @author Bartosz Świrta
- * @brief 
+ * @author Maciej Wojno
+ * @brief Zawieera definicje metod klasy GameState
  * @version 1.0
- * @date 2021-04-06
+ * @date 2021-03-24
  * 
  * @copyright Copyright (c) 2021
  * 

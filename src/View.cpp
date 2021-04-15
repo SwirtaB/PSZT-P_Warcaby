@@ -3,7 +3,7 @@
  * @author Maciej Wojno
  * @brief Zawiera defifnicję metod klasy View
  * @version 1.0
- * @date 2021-01-10
+ * @date 2021-03-24
  * 
  * @copyright Copyright (c) 2021
  * 

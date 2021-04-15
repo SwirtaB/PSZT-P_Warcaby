@@ -1,9 +1,9 @@
 /**
  * @file Controller.hpp
- * @author Bartosz Świrta
+ * @author Maciej Wojno
  * @brief Zawiera definicję klasy Controller - kontroluje przebieg gry.
  * @version 1.0
- * @date 2021-01-10
+ * @date 2021-03-24
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -47,8 +47,9 @@ namespace checkers
         std::optional<Coord> selectedField;
         /// Pośrednik komunikacji z widokiem.
         std::shared_ptr<MessageQueues> messageQueues;
-
+        /// Uchwyt do pliku z logami rozgrywki
         std::optional<std::ofstream> logFile;
+        /// Moment w czasie służacy do pomiaru czasu ruchu bota
         std::optional<std::chrono::time_point<std::chrono::steady_clock>> lastMoveStart;
 
         /// Czy w grze jest gracz który nie jest botem.

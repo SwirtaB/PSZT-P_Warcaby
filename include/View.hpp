@@ -3,7 +3,7 @@
  * @author Maciej Wojno
  * @brief Zawiera definicję klasy View
  * @version 1.0
- * @date 2021-01-10
+ * @date 2021-03-24
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -62,10 +62,14 @@ namespace checkers
          */
         bool board_button(std::optional<PieceEnum> &pawn, bool is_selected, bool is_dark) const;
         /**
-         * @brief Sprawdza czy przyszedł nowy stan od kontrolera.
+         * @brief Oblicza współczynnik skalowania tekstu w zależności od rozmiaru okna.
          * 
          */
         float get_font_scale() const;
+        /**
+         * @brief Sprawdza czy przyszedł nowy stan od kontrolera.
+         * 
+         */
         void check_for_new_state();
         /**
          * @brief Wysyła akcję gracza do kontrolera.

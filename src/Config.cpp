@@ -1,9 +1,9 @@
 /**
  * @file Config.cpp
  * @author Maciej Wojno
- * @brief Zawiera definicję metody try_from_script.
+ * @brief Zawiera definicję metody try_from_args
  * @version 1.0
- * @date 2021-01-10
+ * @date 2021-03-24
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -18,7 +18,7 @@ using namespace checkers;
 
 
 /**
- * @brief Spróbuj stworzyć plik konfiguracyjny z argumentów wywołania programu.
+ * @brief Próbuje wczytać dane konfiguracyjne z argumentów wywołania programu.
  *
  * @param argc - ilość argumentów wywołania programu
  * @param argv - tablica argumentów wywołania

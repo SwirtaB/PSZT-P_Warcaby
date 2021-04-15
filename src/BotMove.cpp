@@ -1,7 +1,7 @@
 /**
  * @file BotMove.cpp
  * @author Bartosz Świrta
- * @brief Zawiera definicje metody bot_move, estimate_move - heurystyka ewaluujaca ruch, minimax - implementuje algorytm minimax
+ * @brief Zawiera definicję funkcji, które implementują bota.
  * @version 1.0
  * @date 2021-04-13
  * 

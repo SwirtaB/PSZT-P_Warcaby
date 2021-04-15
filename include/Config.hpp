@@ -1,9 +1,9 @@
 /**
  * @file Config.hpp
  * @author Maciej Wojno
- * @brief Zawiera definicję struktury Config - przechowuje dane konfiguracyjne wczytane z pliku, oraz enumeratorów ConfigStart, ConfigBotTactic, ConfigUiSize.
+ * @brief Zawiera definicję struktury Config - przechowuje dane konfiguracyjne rozgrywki, oraz enumerator typu heurystyki HeuristicEnum.
  * @version 1.0
- * @date 2021-01-10
+ * @date 2021-03-24
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -55,7 +55,7 @@ namespace checkers
          */
         int blackBotDepth = 3;
         /**
-         * @brief Spróbuj stworzyć plik konfiguracyjny z argumentów wywołania programu.
+         * @brief Ścieżka do pliku z logami rozgrywki
          */
         std::optional<string> logPath = std::nullopt;
         /**

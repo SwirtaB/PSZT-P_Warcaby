@@ -1,9 +1,9 @@
 /**
  * @file MessageQueues.cpp
- * @author Maciej Wojno
+ * @author Bartosz Świrta
  * @brief Zawiera definicję motod klasy MessageQueues.
  * @version 1.0
- * @date 2021-01-10
+ * @date 2021-03-25
  * 
  * @copyright Copyright (c) 2021
  * 

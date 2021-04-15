@@ -3,7 +3,7 @@
  * @author Maciej Wojno
  * @brief 
  * @version 1.0
- * @date 
+ * @date 2021-03-24
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -162,24 +162,110 @@ namespace checkers
         std::vector<std::string> pastBoardStates;
 
         /**
-         * @param field
-         * @param piece
+         * @brief Ustawia wartość pola.
+         * 
+         * @param field Koordynaty pola.
+         * @param piece Enumerator bierki.
          */
         void set_field(Coord field, std::optional<PieceEnum> piece);
+        /**
+         * @brief Wykonuje ruch bierką. Przestawia ją z pola obecnego na pole docelowe.
+         * 
+         * @param src Obecna pozycja bierki.
+         * @param dst Pole docelowe.
+         */
         void move_piece(Coord src, Coord dst);
+        /**
+         * @brief Decyduje, który gracz wykonuje ruch jako kolejny.
+         * 
+         */
         void flip_current_player();
+        /**
+         * @brief Zlicza bierki obecnego gracza, które mają dostępne bicie.
+         * 
+         * @return int liczba bierek z biciem.
+         */
         int count_pieces_with_attack() const;
-        // relaxed bo nie sprawdza czy są inne możliwe ruchy bijące
+        /**
+         * @brief Sprawdza możliwość ruchu bez weryfikacji czy bierka ma dostępne bicia.
+         * 
+         * @param from Obecne pozycja bierki.
+         * @param to Pole docelowe.
+         * @return true Można wykonać ruch.
+         * @return false Nie można wykonać ruchu.
+         */
         bool can_move_piece_relaxed(Coord from, Coord to) const;
+        /**
+         * @brief Czy bierka ma dostępne bicie.
+         * 
+         * @param field Koordynaty bierki.
+         * @return true 
+         * @return false 
+         */
         bool piece_has_attacks(Coord field) const;
+        /**
+         * @brief Zapisuje zakodowany stan planszy. Stany te pozwalają wykryć remis.
+         * 
+         */
         void push_past_board_state();
+        /**
+         * @brief Aktualizuje warunki remisu.
+         * 
+         * @param irreversible Czy został wykonany ruch resetujący warunki remisu, bo stan sprzed tego ruchu jest już niemożliwy do uzyskania.
+         */
         void update_tie_conditions(bool irreversible);
+        /**
+         * @brief Sprawdza warunki remisu.
+         * 
+         * @return true Wystąpił remis.
+         * @return false Remis nie wystąpił.
+         */
         bool has_tie_happened() const;
+        /**
+         * @brief Sprawdza czy nie ma bierki między dwoma polami.
+         * 
+         * @param start Pole początkowe.
+         * @param end Pole końcowe.
+         * @return true Między polami nie ma bierki.
+         * @return false Między polami jest bierka.
+         */
         bool is_empty_between(Coord start, Coord end) const;
+        /**
+         * @brief Sprawdza czy między polami jest tylko jedna bierka.
+         * 
+         * @param start Pole początkowe.
+         * @param end Pole końcowe.
+         * @return true Między polami jest tylko jedna bierka.
+         * @return false Między polami nie ma żadnej bierki.
+         */
         bool is_only_one_enemy_between(Coord start, Coord end) const;
+        /**
+         * @brief Aktualizuje stan rozgrywki.
+         * 
+         */
         void update_game_progress();
+        /**
+         * @brief Czy bierka jest gracza obecnie wykonującego ruch.
+         * 
+         * @param field Koordynaty bierki.
+         * @return true 
+         * @return false 
+         */
         bool is_current_player_piece(Coord field) const;
+        /**
+         * @brief Czy bierka należy do przeciwnika.
+         * 
+         * @param field Koordynaty bierki.
+         * @return true 
+         * @return false 
+         */
         bool is_enemy_player_piece(Coord field) const;
+        /**
+         * @brief Ściąga zbity pion z planszy.
+         * 
+         * @param start Pole początkowe ruchu.
+         * @param end Pole końcowe ruchu.
+         */
         void clear_between(Coord start, Coord end);
 
         static bool is_in_board(int x, int y) {

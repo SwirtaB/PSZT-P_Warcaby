@@ -1,9 +1,9 @@
 /**
  * @file Controller.cpp
- * @author Bartosz Świrta
+ * @author Maciej Wojno
  * @brief Zawiera definicję metod klasy Controller
  * @version 1.0
- * @date 2021-01-10
+ * @date 2021-03-24
  *
  * @copyright Copyright (c) 2021
  *
@@ -98,7 +98,6 @@ void Controller::run()
 }
 
 
-///
 /**
  * @brief Czy w grze jest gracz który nie jest botem.
  *
