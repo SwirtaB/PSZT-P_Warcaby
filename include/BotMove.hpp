@@ -44,7 +44,7 @@ namespace checkers::bot
      * @param gameState - rozpatrywany stan gry
      * @return - jakość danego stanu
      */
-    int better_heuristic(const GameState &gameState);
+    int board_aware_heuristic(const GameState &gameState);
     /**
      * @brief Weryfikuje czy doszło do zakończenia rozgrywki (kto wygrał, bądź remis). Jeżeli nie to wywołuje stosowną funkcję heurystyczną.
      * @param gameState - rozpatrywany stan gry

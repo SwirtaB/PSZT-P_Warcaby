@@ -11,6 +11,7 @@
 #pragma once
 
 #include <optional>
+#include <fstream>
 
 #include "MessageQueues.hpp"
 #include "Game.hpp"
@@ -47,6 +48,11 @@ namespace checkers
         /// Pośrednik komunikacji z widokiem.
         std::shared_ptr<MessageQueues> messageQueues;
 
+        std::optional<std::ofstream> logFile;
+        std::optional<std::chrono::time_point<std::chrono::steady_clock>> lastMoveStart;
+
+        /// Czy w grze jest gracz który nie jest botem.
+        bool has_human_player() const;
         /// Czy ruch ma wykonać gracz który nie jest botem.
         bool need_player_input() const;
         /// Odbierz akcję gracza od widoku.
@@ -55,6 +61,14 @@ namespace checkers
         void send_state() const;
         /// Zakończ pracę kontrolera, zapisz stan gry jeśli była w trakcie.
         void exit();
+        /// Spróbuj zapisać do logu informację o rozpoczętej grze.
+        void try_log_start_game();
+        /// Spróbuj zapisać do logu informację o rozpoczęciu ruchu.
+        void try_log_start_move();
+        /// Spróbuj zapisać do logu informację o zakończeniu ruchu.
+        void try_log_end_move();
+        /// Spróbuj zapisać do logu wynik rozgrywki.
+        void try_log_end_game();
     };
 
 } // namespace checkers

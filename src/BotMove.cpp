@@ -104,7 +104,7 @@ int checkers::bot::aggressive_basic_heuristic(const GameState &gameState) {
                         whiteQueensValue += basicHeuristicTable[1] + 8;
                         break;
                     case BLACK_PAWN:
-                        blackPawnsValue += basicHeuristicTable[2] + j;
+                        blackPawnsValue += basicHeuristicTable[2] + 8 - j;
                         break;
                     case BLACK_QUEEN:
                         blackQueensValue += basicHeuristicTable[3] + 8;
@@ -117,7 +117,7 @@ int checkers::bot::aggressive_basic_heuristic(const GameState &gameState) {
     return score;
 }
 
-int checkers::bot::better_heuristic(const GameState &gameState) {
+int checkers::bot::board_aware_heuristic(const GameState &gameState) {
     BoardState board = gameState.get_board_state();
     int score = 0;
     int whitePawns = 0, whiteQueens = 0, blackPawns = 0, blackQueens = 0;
@@ -179,7 +179,7 @@ int checkers::bot::estimate_move(const GameState &gameState, HeuristicEnum heuri
         default:
             break;
     }
-    int score;
+    int score = 0;
     switch (heuristicType) {
         case checkers::BASIC:
             score = basic_heuristic(gameState);
@@ -187,8 +187,8 @@ int checkers::bot::estimate_move(const GameState &gameState, HeuristicEnum heuri
         case checkers::A_BASIC:
             score = aggressive_basic_heuristic(gameState);
             break;
-        case checkers::BETTER:
-            score = better_heuristic(gameState);
+        case checkers::BOARD_AWARE:
+            score = board_aware_heuristic(gameState);
             break;
     }
     return score;

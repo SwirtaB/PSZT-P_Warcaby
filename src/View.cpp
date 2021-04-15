@@ -92,10 +92,25 @@ void View::update()
 
         } else if (progress == WHITE_WON) {
             ImGui::Text("White Won!");
+            ImGui::NewLine();
+            if (ImGui::Button("Exit")) {
+                send_player_input(PlayerInputMessage(EXIT, 0, 0));
+                quit();
+            }
         } else if (progress == BLACK_WON) {
             ImGui::Text("Black Won!");
+            ImGui::NewLine();
+            if (ImGui::Button("Exit")) {
+                send_player_input(PlayerInputMessage(EXIT, 0, 0));
+                quit();
+            }
         } else if (progress == TIE) {
             ImGui::Text("Tie!");
+            ImGui::NewLine();
+            if (ImGui::Button("Exit")) {
+                send_player_input(PlayerInputMessage(EXIT, 0, 0));
+                quit();
+            }
         }
     }
 

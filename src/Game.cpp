@@ -59,6 +59,7 @@ bool GameState::can_select_field(Coord field) const {
 bool GameState::try_make_move(Coord from, Coord to) {
     if (can_move_piece(from, to)) {
         move_piece(from, to);
+        lastMove = to;
 
         bool attacked = false;
         if (!is_empty_between(from, to)) {
@@ -74,6 +75,11 @@ bool GameState::try_make_move(Coord from, Coord to) {
 
         if (!attacked || !piece_has_attacks(to)) {
             flip_current_player();
+            update_tie_conditions(
+                    attacked
+                    || lastMove.has_value()
+                    || get_field(to).value() == WHITE_PAWN
+                    || get_field(to).value() == BLACK_PAWN);
         }
         update_game_progress();
         return true;
@@ -311,7 +317,52 @@ bool GameState::piece_has_attacks(Coord field) const {
     return false;
 }
 
+void GameState::push_past_board_state() {
+    std::string state;
+    for (int x = 0; x < 8; ++x) {
+        for (int y = 0; y < 8; ++y) {
+            if ((x + y) % 2 == 0) {
+                if (get_field(Coord(x, y)).has_value()) {
+                    auto piece = get_field(Coord(x, y));
+                    if (piece == WHITE_PAWN) {
+                        state.push_back('w');
+                    } else if (piece == WHITE_QUEEN) {
+                        state.push_back('W');
+                    } else if (piece == BLACK_PAWN) {
+                        state.push_back('b');
+                    } else {
+                        state.push_back('B');
+                    }
+                } else {
+                    state.push_back(' ');
+                }
+            }
+        }
+    }
+    pastBoardStates.push_back(std::move(state));
+}
+
+void GameState::update_tie_conditions(bool irreversible) {
+    if (irreversible) {
+        pastBoardStates.clear();
+        queenMovesNoTake = 0;
+    }
+    push_past_board_state();
+    queenMovesNoTake += 1;
+}
+
 bool GameState::has_tie_happened() const {
+    if (queenMovesNoTake >= 30) return true;
+
+    int repeats = 0;
+    const std::string &last = pastBoardStates.back();
+    for (auto state : pastBoardStates) {
+        if (state == last) {
+            ++repeats;
+        }
+    }
+    if (repeats >= 3) return true;
+
     return false;
 }
 
