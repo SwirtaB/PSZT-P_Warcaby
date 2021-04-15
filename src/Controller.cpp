@@ -15,7 +15,6 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
-#include <climits>
 
 using namespace checkers;
 
@@ -31,6 +30,11 @@ Controller::Controller(Config &config_, std::shared_ptr<MessageQueues> queuesHan
 {
     gameState.init();
     send_state();
+
+    if (config.logPath.has_value()) {
+        logFile = std::ofstream(config.logPath.value());
+    }
+    try_log_start_game();
 }
 
 /**
@@ -39,9 +43,11 @@ Controller::Controller(Config &config_, std::shared_ptr<MessageQueues> queuesHan
  */
 void Controller::run()
 {
-    while (true)
+    while (has_human_player() || gameState.get_game_progress() == PLAYING)
     {
-        if (need_player_input()) //need_player_input())  <- replace "true" with right side after fixing the other branch
+        try_log_start_move();
+
+        if (need_player_input())
         {
             PlayerInputMessage message = get_player_input();
             switch (message.messageType)
@@ -70,19 +76,36 @@ void Controller::run()
             std::pair<Coord, Coord> move = std::make_pair(Coord(0,0), Coord(0,0));
             switch(gameState.get_current_player()) {
                 case WHITE:
-                    move = bot::bot_move(gameState, WHITE, config.whiteBotHeuristic, config.depth);
+                    move = bot::bot_move(gameState, WHITE, config.whiteBotHeuristic, config.whiteBotDepth);
                     break;
                 case BLACK:
-                    move = bot::bot_move(gameState, BLACK, config.blackBotHeuristic, config.depth);
+                    move = bot::bot_move(gameState, BLACK, config.blackBotHeuristic, config.blackBotDepth);
                     break;
             }
-             std::this_thread::sleep_for(std::chrono::milliseconds(250));
-             if (!gameState.try_make_move(move.first, move.second)) {
-                 std::cerr << "Bot tried to make illegal move!" << " "  << gameState.get_current_player() << "x: " << move.second.x << "y: " << move.second.y << std::endl;
-             }
-             send_state();
+            if (config.showGUI) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            }
+            if (!gameState.try_make_move(move.first, move.second)) {
+             std::cerr << "Bot tried to make illegal move!" << " "  << gameState.get_current_player()
+                << "x: " << move.second.x << "y: " << move.second.y << std::endl;
+            }
+            send_state();
         }
+
+        try_log_end_move();
     }
+    exit();
+}
+
+
+///
+/**
+ * @brief Czy w grze jest gracz który nie jest botem.
+ *
+ * @return Czy w grze jest gracz który nie jest botem.
+ */
+bool Controller::has_human_player() const {
+    return !config.whiteIsBot || !config.blackIsBot;
 }
 
 /**
@@ -104,8 +127,8 @@ PlayerInputMessage Controller::get_player_input()
 bool Controller::need_player_input() const
 {
     return gameState.get_game_progress() != PLAYING ||
-        (gameState.get_current_player() == WHITE && !config.white_is_bot
-        || gameState.get_current_player() == BLACK && !config.black_is_bot);
+        (gameState.get_current_player() == WHITE && !config.whiteIsBot
+        || gameState.get_current_player() == BLACK && !config.blackIsBot);
 }
 
 /**
@@ -114,9 +137,11 @@ bool Controller::need_player_input() const
  */
 void Controller::send_state() const
 {
-    messageQueues->send_game_state(
-        GameStateMessage(gameState.get_game_progress(), gameState.get_board_state(), selectedField)
-    );
+    if (config.showGUI) {
+        messageQueues->send_game_state(
+                GameStateMessage(gameState.get_game_progress(), gameState.get_board_state(), selectedField)
+        );
+    }
 }
 
 /**
@@ -125,4 +150,102 @@ void Controller::send_state() const
  */
 void Controller::exit()
 {
+    try_log_end_game();
 }
+
+/**
+ * @brief Spróbuj zapisać do logu informację o rozpoczętej grze.
+ *
+ */
+void Controller::try_log_start_game() {
+    if (logFile.has_value()) {
+        // WHITE
+        logFile.value() << "white_param ";
+        // WHITE BOT
+        if (config.whiteIsBot) {
+            logFile.value() << "bot ";
+            if (config.whiteBotHeuristic == BASIC) {
+                logFile.value() << "basic ";
+            } else if (config.whiteBotHeuristic == A_BASIC) {
+                logFile.value() << "a_basic ";
+            } else {
+                logFile.value() << "board_aware ";
+            }
+            logFile.value() << config.whiteBotDepth;
+        // WHITE PLAYER
+        } else {
+            logFile.value() << "player";
+        }
+
+        logFile.value() << std::endl;
+
+        // BLACK
+        logFile.value() << "black_param ";
+        // BLACK BOT
+        if (config.whiteIsBot) {
+            logFile.value() << "bot ";
+            if (config.blackBotHeuristic == BASIC) {
+                logFile.value() << "basic ";
+            } else if (config.blackBotHeuristic == A_BASIC) {
+                logFile.value() << "a_basic ";
+            } else {
+                logFile.value() << "board_aware ";
+            }
+            logFile.value() << config.blackBotDepth;
+        // BLACK PLAYER
+        } else {
+            logFile.value() << "player";
+        }
+
+        logFile.value() << std::endl;
+    }
+}
+
+/**
+ * @brief Spróbuj zapisać do logu informację o rozpoczęciu ruchu.
+ *
+ */
+void Controller::try_log_start_move() {
+    if (logFile.has_value()) {
+        if (gameState.get_current_player() == WHITE) {
+            logFile.value() << "white ";
+        } else {
+            logFile.value() << "black ";
+        }
+        lastMoveStart = std::chrono::steady_clock::now();
+    }
+}
+
+/**
+ * @brief Spróbuj zapisać do logu informację o zakończeniu ruchu..
+ *
+ */
+void Controller::try_log_end_move() {
+    if (logFile.has_value()) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(now - lastMoveStart.value()).count();
+        logFile.value() << duration << std::endl;
+    }
+}
+
+
+/**
+ * @brief Spróbuj zapisać do logu wynik rozgrywki.
+ *
+ */
+void Controller::try_log_end_game() {
+    if (logFile.has_value()) {
+        if (gameState.get_game_progress() == PLAYING) {
+            logFile.value() << "game_interrupted" << std::endl;
+        } else if (gameState.get_game_progress() == WHITE_WON) {
+            logFile.value() << "white_won" << std::endl;
+        } else if (gameState.get_game_progress() == BLACK_WON) {
+            logFile.value() << "black_won" << std::endl;
+        } else if (gameState.get_game_progress() == TIE) {
+            logFile.value() << "tie" << std::endl;
+        }
+        logFile.value().close();
+    }
+}
+
+

@@ -20,43 +20,49 @@ using std::string;
 namespace checkers
 {
     /** \struct Config
-     * @brief Struktura reprezentująca wczytane dane konfiguracyjne.
-     * @details Jest wczytywany ze zmiennych ze skryptu w pythonie o nazwie config.py
-     *          w katalogu w którym uruchomiony został program lub ze ścieżki
-     *          podanej jako argument wywołania programu.
-     *          Możliwe konfiguracje widoczne w pliku config.py w głównym folderze projektu.
-     * 
+     * @brief Struktura reprezentująca dane konfiguracyjne programu.
      */
      enum HeuristicEnum{
          BASIC,
          A_BASIC,
-         BETTER
+         BOARD_AWARE
      };
+
     struct Config
     {
         /**
          * @brief Czy białymi steruje bot.
          */
-        bool white_is_bot = true;
+        bool whiteIsBot = false;
         /**
          * @brief Heurystyka, którą posługuje się biały bot.
          */
-        HeuristicEnum whiteBotHeuristic = A_BASIC;
+        HeuristicEnum whiteBotHeuristic = BASIC;
+        /**
+         * @brief Głębokość przeszukiwania drzewa gry przez białego bota.
+         */
+        int whiteBotDepth = 3;
         /**
          * @brief Czy czarnymi steruje bot.
          */
-        bool black_is_bot = true;
+        bool blackIsBot = true;
         /**
-         * @brief Heurystyka, którą posługuje się czzarny bot.
+         * @brief Heurystyka, którą posługuje się czarny bot.
          */
-        HeuristicEnum blackBotHeuristic = BETTER;
+        HeuristicEnum blackBotHeuristic = BASIC;
         /**
-         * @brief Głębokość przeszukiwania drzewa gry.
+         * @brief Głębokość przeszukiwania drzewa gry przez czernego bota.
          */
-        int depth = 4;
+        int blackBotDepth = 3;
         /**
-         * @brief Spróbuj wczytać plik konfiguracyjny z argumentów wywołania programu.
+         * @brief Spróbuj stworzyć plik konfiguracyjny z argumentów wywołania programu.
          */
+        std::optional<string> logPath = std::nullopt;
+        /**
+         * @brief Czy uruchomić GUI.
+         */
+         bool showGUI = true;
+
         static std::optional<Config> try_from_args(int argc, char *argv[]);
     };
 
