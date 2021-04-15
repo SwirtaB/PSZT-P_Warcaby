@@ -63,8 +63,10 @@ void Controller::run()
                         bool moved = gameState.try_make_move(selectedField.value(), Coord(message.x, message.y));
                         if (moved && gameState.can_select_field(Coord(message.x, message.y))) {
                             selectedField = Coord(message.x, message.y);
+                            try_log_end_move();
                         } else if (moved) {
                             selectedField = std::nullopt;
+                            try_log_end_move();
                         }
                     }
                     break;
@@ -82,17 +84,18 @@ void Controller::run()
                     move = bot::bot_move(gameState, BLACK, config.blackBotHeuristic, config.blackBotDepth);
                     break;
             }
-            if (config.showGUI) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(250));
-            }
             if (!gameState.try_make_move(move.first, move.second)) {
              std::cerr << "Bot tried to make illegal move!" << " "  << gameState.get_current_player()
                 << "x: " << move.second.x << "y: " << move.second.y << std::endl;
             }
+            try_log_end_move();
+
+            if (config.showGUI) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            }
             send_state();
         }
 
-        try_log_end_move();
     }
     exit();
 }
