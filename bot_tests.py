@@ -2,8 +2,12 @@
 
 import os
 import sys
+import itertools
 
-def run_games():
+heuristics = ["basic", "a_basic", "board_aware"]
+depth_range = range(1, 7)
+
+def run_games(executable):
     try:
         os.mkdir("match_results")
     except FileExistsError:
@@ -14,11 +18,11 @@ def run_games():
     except FileExistsError:
         pass
 
-    executable = ""
-    if sys.platform.startswith("win"):
-        executable = "powershell.exe ./bin/pszt_warcaby.exe"
-    else:
-        executable = "./bin/pszt_warcaby"
+    if executable == None:
+        if sys.platform.startswith("win"):
+            executable = "powershell.exe ./bin/pszt_warcaby.exe"
+        else:
+            executable = "./bin/pszt_warcaby"
     
     base_params = " --wbot true --bbot true --gui false --log ./match_results/"
     
@@ -36,13 +40,21 @@ def run_games():
     else:
         os.system("rm -rf match_results")
 
+
 def get_test_games():
     games = []
-    for i in range(1, 5):
-        games.append({"name": "basic-%d-vs-a_basic-%d.txt"%(i,i), "params": "--wheuristic basic --wdepth %d --bheuristic a_basic --bdepth %d"%(i,i) })
-        games.append({"name": "a_basic-%d-vs-basic-%d.txt"%(i,i), "params": "--wheuristic a_basic --wdepth %d --bheuristic basic --bdepth %d"%(i,i) })
+    for i in depth_range:
+        for h_permut in itertools.permutations(heuristics):
+            h1 = h_permut[0]
+            h2 = h_permut[1]
+
+            games.append({
+                "name": "%s-%d-vs-%s-%d.txt"%(h1,i,h2,i),
+                "params": "--wheuristic %s --wdepth %d --bheuristic %s --bdepth %d"%(h1,i,h2,i)
+            })
 
     return games
+
 
 def process_log(in_path, out_path):
     inf = open(in_path, "r")
@@ -76,4 +88,8 @@ def process_log(in_path, out_path):
 
 
 if __name__ == "__main__":
-    run_games()
+    exec = None
+    if (len(sys.argv) == 2):
+        exec = sys.argv[1]
+
+    run_games(exec)
