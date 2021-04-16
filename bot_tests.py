@@ -1,11 +1,11 @@
-#!/bin/python
+#! /usr/bin/python3
 
 import os
 import sys
 import itertools
 
 heuristics = ["basic", "a_basic", "board_aware"]
-depth_range = range(1, 7)
+depth_range = range(1, 9)
 
 def run_games(executable):
     try:
