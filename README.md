@@ -2,12 +2,7 @@
 Projekt realizowany w ramach przedmiotu PSZT (Podstawy Sztucznej Inteligencji).
 Prosta gra w warcaby w wersji rosyjskiej. Gracz może rozgrywać partię z komputerem, który wykorzytuje drzewo gry (algorytm minimax z przycinaniem alpha-beta) lub z innym graczem wykonując ruchy na zmianę na jednej maszynie.
 
-## Wymagania
-#### Linux
-- Biblioteka Boost (1.71+) wykrywana przez CMake
-- Python (3.8+) wykrywany przez CMake
-#### Windows
-- Biblioteka Boost wykrywana przez kompilator (np. vcpkg zintegrowane z MSBuild)
+## Wymagania do kompilacji
 - Python (3.8+) wykrywany przez CMake
 
 ## Budowanie i uruchomienie
@@ -22,28 +17,34 @@ cd ..
 Uruchomienie:
 #### Windows
 ``` sh
-./bin/Debug/pszt_warcaby.exe [sciezka/do/pliku/konfiguracyjnego]
+./bin/Debug/pszt_warcaby.exe [opcjonalne parametry wywołania]
 ```
 #### Linux
 ``` sh
-./bin/pszt_warcaby [sciezka/do/pliku/konfiguracyjnego]
+./bin/pszt_warcaby [opcjonalne parametry wywołania]
 ```
-## Generowanie i uruchomienie testow
-Flaga BUILD_TESTS w CMakeLists.txt kontroluje uruchamianie testów przy budowie
-``` cmake
-set(BUILD_TESTS True)
+## Parametry wywołania programu
+Wszystkie parametry składają się z dwuch członów - opcji oraz przypisywanej jej wartości. \
+Program akceptuje następujące parametry wywołania:
+- --log (ścieżka do pliku) - ścieżka do pliku w którym zapisane będa statystyki rozgrywki.
+- --gui (true/false) - czy uruchamiać widok (przydatne do testów komputer vs komputer).
+- --wbot (true/false) - czy graczem białym steruje komputer.
+- --bbot (true/false) - czy graczem czarnym steruje komputer.
+- --wheuristic (basic/a_basic/board_aware) - heurysytyka którą posługuje się biały komputer.
+- --bheuristic (basic/a_basic/board_aware) - heurysytyka którą posługuje się czarny komputer.
+- --wdepth (liczba dodatnia) - maksymalna głębokość przesukiwania drzewa gry przez biały komputer.
+- --bdepth (liczba dodatnia) - maksymalna głębokość przesukiwania drzewa gry przez czarny komputer.
+
+## Skrypt testujący grę komputera
+Skrypt bot_tests.py przeprowadza gry pomiędzy różnymi heurystykami z różnymi ustawieniami głębokości.\
+W folderze *match_results* umieszcza surowe logi z gier. \
+W folderze *results* umieszcza logi gier z uśrednionym czasem ruchu każdego gracza. \
+W folderze *reports* umieszcza raporty dotyczące potyczek konkretnych par heurystyk oraz czasu ruchów heurystyk \
+#### Uruchomienie
 ```
-Po zbudowaniu z flaga BUILD_TESTS:
-#### Windows
-``` sh
-cd tests
-../build/Debug/tests.exe
+python bot_tests.py [ścieżka do programu warcaby]
 ```
-#### Linux
-``` sh
-cd tests
-../build/tests
-```
+
 ## Generowanie dokumentacji
 Flaga BUILD_DOCS w CMakeLists.txt kontroluje budowanie dokumentacji
 ``` cmake
