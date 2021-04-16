@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/python3
 
 import os
 import sys
@@ -34,12 +34,6 @@ def run_games(executable):
         print("played game " + game["name"])
         process_log("./match_results/" + game["name"], "results/" + game["name"])
 
-    
-    if sys.platform.startswith("win"):
-        os.system("powershell.exe rm -r match_results")
-    else:
-        os.system("rm -rf match_results")
-
 
 def get_test_games():
     games = []
@@ -54,6 +48,89 @@ def get_test_games():
             })
 
     return games
+
+
+def create_matchup_report():
+    print("Creating matchup reports")
+    try:
+        os.mkdir("reports")
+    except FileExistsError:
+        pass
+
+    for fst in range(0, len(heuristics) - 1):
+        for snd in range(fst + 1, len(heuristics)):
+            fh = heuristics[fst]
+            sh = heuristics[snd]
+
+            outf = open("reports/matchup-report-%s-%s.txt"%(fh, sh), "w")
+            outf.write("depth,%s won, %s won\n"%(fh, sh))
+
+            for depth in depth_range:
+                fst_wins = 0
+                snd_wins = 0
+                inf = open("results/%s-%d-vs-%s-%d.txt"%(fh, depth, sh, depth))
+                res = inf.read().split('\n')
+                if res[4] == "white_won":
+                    fst_wins += 1
+                elif res[4] == "black_won":
+                    snd_wins += 1
+                inf.close()
+                inf = open("results/%s-%d-vs-%s-%d.txt"%(sh, depth, fh, depth))
+                res = inf.read().split('\n')
+                if res[4] == "white_won":
+                    snd_wins += 1
+                elif res[4] == "black_won":
+                    fst_wins += 1
+                inf.close()
+                outf.write("%d,%d,%d\n"%(depth, fst_wins, snd_wins))
+
+    outf.close()
+
+
+
+def create_time_report():
+    print("Creating time report")
+    try:
+        os.mkdir("reports")
+    except FileExistsError:
+        pass
+
+    outfs = {}
+    for h in heuristics:
+        outfs[h] = open("reports/time-report-%s.txt"%h, "w")
+        outfs[h].write("depth,time\n")
+
+    for depth in depth_range:
+
+        time_sum = {}
+        game_count = {}
+        for h in heuristics:
+            time_sum[h] = 0
+            game_count[h] = 0
+
+        for h_permut in itertools.permutations(heuristics):
+            fh = h_permut[0]
+            sh = h_permut[1]
+
+            inf = open("results/%s-%d-vs-%s-%d.txt"%(fh, depth, sh, depth))
+            res = inf.read().split('\n')
+            for line in res:
+                frags = line.split(' ')
+                if frags[0] == "white_average_move_time":
+                    time_sum[fh] += float(frags[1])
+                    game_count[fh] += 1
+                elif frags[0] == "black_average_move_time":
+                    time_sum[sh] += float(frags[1])
+                    game_count[sh] += 1
+               
+        for h in heuristics:
+            avg = time_sum[h] / game_count[h] 
+            inf.close()
+            outfs[h].write("%d,%d\n"%(depth, avg))
+
+
+    for h in heuristics:
+        outfs[h].close()
 
 
 def process_log(in_path, out_path):
@@ -93,3 +170,5 @@ if __name__ == "__main__":
         exec = sys.argv[1]
 
     run_games(exec)
+    create_matchup_report()
+    create_time_report()
